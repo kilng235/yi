@@ -1,0 +1,389 @@
+/* ===== VARIABLES ===== */
+.nexus-container {
+  --nx-bg: var(--background-primary);
+  --nx-bg-alt: var(--background-secondary);
+  --nx-text: var(--text-normal);
+  --nx-text-muted: var(--text-muted);
+  --nx-accent: var(--interactive-accent);
+  --nx-accent-light: var(--interactive-accent-hover);
+  --nx-border: var(--background-modifier-border);
+  --nx-radius: 8px;
+  --nx-shadow: 0 2px 8px rgba(0,0,0,0.08);
+
+  /* Heatmap */
+  --nx-heat-0: #ebedf0;
+  --nx-heat-1: #9be9a8;
+  --nx-heat-2: #40c463;
+  --nx-heat-3: #30a14e;
+  --nx-heat-4: #216e39;
+
+  font-family: var(--font-interface);
+  color: var(--nx-text);
+  padding: 16px;
+}
+
+/* ===== BANNER ===== */
+.nexus-banner {
+  border-radius: var(--nx-radius);
+  min-height: 120px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--nx-accent), var(--nx-accent-light));
+}
+
+.nexus-banner--has-image {
+  cursor: grab;
+  background-size: cover;
+  background-position: center;
+}
+
+.nexus-banner-overlay {
+  width: 100%;
+  padding: 16px 20px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.5));
+}
+
+.nexus-banner-quote {
+  color: #fff;
+  font-size: 1.2em;
+  font-weight: 600;
+  margin: 0;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+/* ===== GRID ===== */
+.nexus-grid {
+  flex: 1;
+  min-height: 0;
+}
+
+.nexus-cell {
+  background: var(--nx-bg-alt);
+  border-radius: var(--nx-radius);
+  padding: 12px;
+  box-shadow: var(--nx-shadow);
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== KANBAN ===== */
+.nexus-kanban {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.nexus-kanban-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.nexus-kanban-header h3 {
+  margin: 0;
+}
+
+.nexus-kanban-add {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--nx-accent);
+  color: #fff;
+  font-size: 1.2em;
+  cursor: pointer;
+}
+
+.nexus-kanban-board {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  overflow-x: auto;
+}
+
+.nexus-kanban-column {
+  flex: 1;
+  min-width: 120px;
+  background: var(--nx-bg);
+  border-radius: var(--nx-radius);
+  padding: 8px;
+}
+
+.nexus-kanban-col-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.nexus-kanban-col-title {
+  font-weight: 600;
+  font-size: 0.9em;
+}
+
+.nexus-kanban-col-count {
+  font-size: 0.8em;
+  color: var(--nx-text-muted);
+  background: var(--nx-bg-alt);
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+.nexus-kanban-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.nexus-kanban-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: var(--nx-bg-alt);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.nexus-kanban-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.nexus-kanban-card--done {
+  opacity: 0.6;
+}
+
+.nexus-kanban-card--done .nexus-kanban-card-title {
+  text-decoration: line-through;
+}
+
+.nexus-kanban-card-title {
+  flex: 1;
+  font-size: 0.9em;
+}
+
+/* ===== TODO ===== */
+.nexus-todo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.nexus-todo-header {
+  margin-bottom: 12px;
+}
+
+.nexus-todo-header h3 {
+  margin: 0;
+}
+
+.nexus-todo-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.nexus-todo-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--nx-border);
+}
+
+.nexus-todo-title {
+  flex: 1;
+  font-size: 0.9em;
+}
+
+.nexus-todo-due {
+  font-size: 0.8em;
+  color: var(--nx-text-muted);
+}
+
+.nexus-todo-completed {
+  opacity: 0.5;
+  text-decoration: line-through;
+}
+
+.nexus-todo-empty {
+  text-align: center;
+  color: var(--nx-text-muted);
+  padding: 20px;
+}
+
+/* ===== HEATMAP ===== */
+.nexus-heatmap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.nexus-heatmap-header {
+  margin-bottom: 12px;
+}
+
+.nexus-heatmap-header h3 {
+  margin: 0;
+}
+
+.nexus-heatmap-grid {
+  flex: 1;
+  overflow-x: auto;
+}
+
+.nexus-heatmap-table {
+  border-collapse: collapse;
+  font-size: 0.75em;
+}
+
+.nexus-heatmap-table td {
+  width: 14px;
+  height: 14px;
+  padding: 0;
+}
+
+.nexus-heatmap-cell {
+  border-radius: 2px;
+  outline: 1px solid rgba(0,0,0,0.06);
+}
+
+.nexus-heatmap-month {
+  font-size: 0.8em;
+  color: var(--nx-text-muted);
+  text-align: center;
+}
+
+.nexus-heatmap-day-label {
+  font-size: 0.8em;
+  color: var(--nx-text-muted);
+  text-align: right;
+  padding-right: 4px !important;
+}
+
+.nexus-heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 0.8em;
+  color: var(--nx-text-muted);
+}
+
+.nexus-heatmap-legend div {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+}
+
+/* ===== BOOKSHELF ===== */
+.nexus-bookshelf {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.nexus-bookshelf-header {
+  margin-bottom: 12px;
+}
+
+.nexus-bookshelf-header h3 {
+  margin: 0;
+}
+
+.nexus-bookshelf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 12px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.nexus-book-card {
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.2s;
+}
+
+.nexus-book-card:hover {
+  transform: translateY(-4px);
+}
+
+.nexus-book-cover {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.nexus-book-cover-placeholder {
+  width: 100%;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--nx-bg);
+  border-radius: 4px;
+  font-size: 2em;
+}
+
+.nexus-book-title {
+  margin-top: 6px;
+  font-size: 0.85em;
+  color: var(--nx-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ===== MODAL ===== */
+.nexus-modal-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--nx-border);
+  border-radius: 6px;
+  background: var(--nx-bg);
+  color: var(--nx-text);
+  font-size: 0.95em;
+}
+
+.nexus-modal-input:focus {
+  outline: none;
+  border-color: var(--nx-accent);
+}
+
+/* ===== FILE PICKER ===== */
+.nexus-file-picker-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.nexus-file-picker-item:hover {
+  background: var(--nx-bg-alt);
+}
+
+.nexus-file-picker-name {
+  font-weight: 500;
+}
+
+.nexus-file-picker-path {
+  font-size: 0.8em;
+  color: var(--nx-text-muted);
+}
+
+.nexus-file-picker-empty {
+  text-align: center;
+  color: var(--nx-text-muted);
+  padding: 12px;
+}
