@@ -1,0 +1,9 @@
+{
+  "id": "nexus",
+  "name": "Nexus",
+  "version": "0.1.0",
+  "minAppVersion": "0.15.0",
+  "description": "Homepage dashboard — kanban, todo, heatmap, and epub bookshelf in one draggable grid.",
+  "author": "Juno",
+  "isDesktopOnly": false
+}

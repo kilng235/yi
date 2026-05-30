@@ -1,0 +1,24 @@
+{
+  "name": "nexus",
+  "version": "0.1.0",
+  "description": "Homepage dashboard with kanban, todo, heatmap, and epub bookshelf",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "node esbuild.config.mjs production",
+    "version": "node version-bump.mjs && git add manifest.json versions.json"
+  },
+  "keywords": ["obsidian", "plugin", "dashboard", "kanban", "epub"],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "builtin-modules": "^4.0.0",
+    "esbuild": "^0.24.0",
+    "obsidian": "latest",
+    "tslib": "^2.7.0",
+    "typescript": "^5.6.0"
+  },
+  "dependencies": {
+    "jszip": "^3.10.1"
+  }
+}
