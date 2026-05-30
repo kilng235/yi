@@ -7,75 +7,116 @@ export function renderHeatmap(el: HTMLElement, settings: NexusSettings) {
   el.addClass("nexus-heatmap");
 
   const scores = buildDailyScores(settings);
-  const maxScore = Math.max(1, ...Object.values(scores));
-  const totalPoints = Object.values(scores).reduce((a, b) => a + b, 0);
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = today.getMonth();
+  const now = new Date();
+  let viewYear = now.getFullYear();
+  let viewMonth = now.getMonth(); // 0-indexed
 
-  // Header
-  el.createDiv({ cls: "nexus-heatmap-header" })
-    .createEl("h3", { text: `${totalPoints} 活跃度` });
+  function render() {
+    const maxScore = Math.max(1, ...getMonthScores(scores, viewYear, viewMonth));
+    const totalPoints = getMonthScores(scores, viewYear, viewMonth).reduce((a, b) => a + b, 0);
 
-  // Month title
-  const MONTH_NAMES = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
-  el.createDiv({ cls: "nexus-heatmap-month-title" })
-    .createSpan({ text: `${MONTH_NAMES[month]} ${year}`, cls: "nexus-heatmap-month-name" });
+    el.empty();
 
-  // Calendar table
-  const table = el.createEl("table", { cls: "nexus-heatmap-table" });
+    // Header with total
+    el.createDiv({ cls: "nexus-heatmap-header" })
+      .createEl("h3", { text: `${totalPoints} 活跃度` });
 
-  // Header row
-  const thead = table.createEl("thead");
-  const headerRow = thead.createEl("tr");
-  for (const name of DAY_NAMES) {
-    headerRow.createEl("th", { text: name, cls: "nexus-heatmap-th" });
-  }
+    // Month navigation
+    const MONTH_NAMES = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
+    const nav = el.createDiv({ cls: "nexus-heatmap-nav" });
 
-  // Calculate days
-  const firstDay = new Date(year, month, 1);
-  const lastDay = new Date(year, month + 1, 0);
-  const daysInMonth = lastDay.getDate();
-  const startWeekday = (firstDay.getDay() + 6) % 7; // Mon=0
+    const prevBtn = nav.createDiv({ cls: "nexus-heatmap-arrow" });
+    prevBtn.innerHTML = "‹";
+    prevBtn.addEventListener("click", () => {
+      viewMonth--;
+      if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+      render();
+    });
 
-  // Body rows
-  const tbody = table.createEl("tbody");
-  let dayNum = 1 - startWeekday;
+    const monthLabel = nav.createSpan({
+      text: `${MONTH_NAMES[viewMonth]} ${viewYear}`,
+      cls: "nexus-heatmap-month-name",
+    });
 
-  for (let w = 0; w < 6; w++) {
-    if (dayNum > daysInMonth) break;
+    const nextBtn = nav.createDiv({ cls: "nexus-heatmap-arrow" });
+    nextBtn.innerHTML = "›";
+    nextBtn.addEventListener("click", () => {
+      viewMonth++;
+      if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+      render();
+    });
 
-    const row = tbody.createEl("tr");
-
-    for (let d = 0; d < 7; d++) {
-      dayNum++;
-      const td = row.createEl("td", { cls: "nexus-heatmap-td" });
-
-      if (dayNum >= 1 && dayNum <= daysInMonth) {
-        const date = new Date(year, month, dayNum);
-        const key = formatDate(date);
-        const score = scores[key] || 0;
-        const level = score === 0 ? 0 : Math.min(4, Math.ceil((score / maxScore) * 4));
-
-        const cell = td.createDiv({
-          cls: `nexus-heatmap-cell nexus-heatmap-cell--level-${level}`,
-        });
-        cell.createDiv({
-          cls: "nexus-heatmap-tip",
-          text: `${score} 活跃度 · ${month + 1}月${dayNum}日`,
-        });
-      }
-      // Empty cells for days outside the month - just leave td empty
+    // Disable next if already on current month
+    if (viewYear === now.getFullYear() && viewMonth === now.getMonth()) {
+      nextBtn.addClass("nexus-heatmap-arrow--disabled");
     }
+
+    // Calendar table
+    const table = el.createEl("table", { cls: "nexus-heatmap-table" });
+
+    // Header row
+    const thead = table.createEl("thead");
+    const headerRow = thead.createEl("tr");
+    for (const name of DAY_NAMES) {
+      headerRow.createEl("th", { text: name, cls: "nexus-heatmap-th" });
+    }
+
+    // Calculate days
+    const firstDay = new Date(viewYear, viewMonth, 1);
+    const lastDay = new Date(viewYear, viewMonth + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startWeekday = (firstDay.getDay() + 6) % 7; // Mon=0
+
+    // Body rows
+    const tbody = table.createEl("tbody");
+    let dayNum = -startWeekday;
+
+    for (let w = 0; w < 6; w++) {
+      if (dayNum > daysInMonth) break;
+
+      const row = tbody.createEl("tr");
+
+      for (let d = 0; d < 7; d++) {
+        dayNum++;
+        const td = row.createEl("td", { cls: "nexus-heatmap-td" });
+
+        if (dayNum >= 1 && dayNum <= daysInMonth) {
+          const date = new Date(viewYear, viewMonth, dayNum);
+          const key = formatDate(date);
+          const score = scores[key] || 0;
+          const level = score === 0 ? 0 : Math.min(4, Math.ceil((score / maxScore) * 4));
+
+          const cell = td.createDiv({
+            cls: `nexus-heatmap-cell nexus-heatmap-cell--level-${level}`,
+          });
+          cell.createDiv({
+            cls: "nexus-heatmap-tip",
+            text: `${score} 活跃度 · ${viewMonth + 1}月${dayNum}日`,
+          });
+        }
+      }
+    }
+
+    // Legend
+    const legend = el.createDiv({ cls: "nexus-heatmap-legend" });
+    legend.createSpan({ text: "少" });
+    for (let i = 0; i <= 4; i++) {
+      legend.createDiv({ cls: `nexus-heatmap-cell nexus-heatmap-cell--level-${i}` });
+    }
+    legend.createSpan({ text: "多" });
   }
 
-  // Legend
-  const legend = el.createDiv({ cls: "nexus-heatmap-legend" });
-  legend.createSpan({ text: "少" });
-  for (let i = 0; i <= 4; i++) {
-    legend.createDiv({ cls: `nexus-heatmap-cell nexus-heatmap-cell--level-${i}` });
+  render();
+}
+
+function getMonthScores(scores: Record<string, number>, year: number, month: number): number[] {
+  const result: number[] = [];
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  for (let d = 1; d <= lastDay; d++) {
+    const key = formatDate(new Date(year, month, d));
+    result.push(scores[key] || 0);
   }
-  legend.createSpan({ text: "多" });
+  return result;
 }
 
 function buildDailyScores(settings: NexusSettings): Record<string, number> {
@@ -91,8 +132,9 @@ function buildDailyScores(settings: NexusSettings): Record<string, number> {
   for (const [dateKey, activity] of Object.entries(settings.activityLog || {})) {
     const points =
       (activity.cardComplete || 0) * w.cardComplete +
-      (activity.todoCheck || 0) * w.todoCheck +
-      (activity.cardCreate || 0) * w.cardCreate;
+      (activity.cardCreate || 0) * w.cardCreate +
+      (activity.noteEdit || 0) * (w.noteEdit || 0) +
+      (activity.noteCreate || 0) * (w.noteCreate || 0);
     scores[dateKey] = (scores[dateKey] || 0) + points;
   }
 

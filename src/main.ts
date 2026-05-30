@@ -1,6 +1,6 @@
 import { App, Plugin, PluginSettingTab, Setting } from "obsidian";
 import { NexusView, NEXUS_VIEW_TYPE } from "./view";
-import { NEXUS_EPUB_VIEW_TYPE } from "./modules/epub-reader";
+import { EpubReaderView, NEXUS_EPUB_VIEW_TYPE } from "./modules/epub-reader";
 import { NexusSettings, DEFAULT_SETTINGS } from "./types";
 
 export default class NexusPlugin extends Plugin {
@@ -8,11 +8,10 @@ export default class NexusPlugin extends Plugin {
 
   async onload() {
     await this.loadSettings();
+    this.backfillActivityFromVault();
 
     this.registerView(NEXUS_VIEW_TYPE, (leaf) => new NexusView(leaf, this));
-
-    // EPUB reader is opened programmatically via bookshelf click,
-    // NOT via registerExtensions (would conflict with existing epub plugin)
+    this.registerView(NEXUS_EPUB_VIEW_TYPE, (leaf) => new EpubReaderView(leaf));
 
     this.addRibbonIcon("home", "打开 Nexus", () => {
       this.activateView();
@@ -30,11 +29,51 @@ export default class NexusPlugin extends Plugin {
   onunload() {}
 
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const loaded = await this.loadData();
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, loaded);
+    if (loaded?.heatmapWeights) {
+      this.settings.heatmapWeights = Object.assign({}, DEFAULT_SETTINGS.heatmapWeights, loaded.heatmapWeights);
+    }
   }
 
   async saveSettings() {
     await this.saveData(this.settings);
+  }
+
+  private backfillActivityFromVault() {
+    const log = this.settings.activityLog;
+    const now = Date.now();
+    const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
+
+    const dailyCounts: Record<string, number> = {};
+    const files = this.app.vault.getFiles();
+    for (const file of files) {
+      if (file.extension !== "md") continue;
+      if (file.stat.mtime < thirtyDaysAgo) continue;
+      if (file.path.includes(".obsidian/")) continue;
+
+      const date = new Date(file.stat.mtime);
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+      dailyCounts[key] = (dailyCounts[key] || 0) + 1;
+    }
+
+    let changed = false;
+    for (const [dateKey, count] of Object.entries(dailyCounts)) {
+      if (!log[dateKey]) {
+        log[dateKey] = {
+          cardComplete: 0,
+          todoCheck: 0,
+          cardCreate: 0,
+          noteEdit: count,
+          noteCreate: 0,
+        };
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      this.saveSettings();
+    }
   }
 
   async activateView() {
@@ -97,6 +136,19 @@ class NexusSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.bannerQuote)
           .onChange(async (value) => {
             this.plugin.settings.bannerQuote = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("DeepSeek API Key")
+      .setDesc("用于余额查询，不会上传到任何地方")
+      .addText((text) =>
+        text
+          .setPlaceholder("sk-...")
+          .setValue(this.plugin.settings.deepseekApiKey)
+          .onChange(async (value) => {
+            this.plugin.settings.deepseekApiKey = value;
             await this.plugin.saveSettings();
           })
       );

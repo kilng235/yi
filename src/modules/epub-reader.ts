@@ -1,51 +1,156 @@
-import { App, TFile, ItemView, WorkspaceLeaf } from "obsidian";
+import { ItemView, WorkspaceLeaf, TFile } from "obsidian";
 import NexusPlugin from "../main";
+import ePub from "epubjs";
 
-export const NEXUS_EPUB_VIEW_TYPE = "nexus-epub-view";
+export const NEXUS_EPUB_VIEW_TYPE = "nexus-epub-reader";
+
+// Module-level state to pass data to the view factory
+let _pendingFile: TFile | null = null;
+let _pendingPlugin: NexusPlugin | null = null;
+
+export function openEpubInNewLeaf(file: TFile, plugin: NexusPlugin) {
+  _pendingFile = file;
+  _pendingPlugin = plugin;
+  const leaf = plugin.app.workspace.getLeaf(true);
+  leaf.setViewState({ type: NEXUS_EPUB_VIEW_TYPE, active: true });
+  _pendingFile = null;
+  _pendingPlugin = null;
+}
 
 export class EpubReaderView extends ItemView {
-  private file: TFile;
-  private plugin: NexusPlugin;
-  private readingStartTime: number = 0;
-  private container: HTMLElement | null = null;
+  file: TFile | null;
+  plugin: NexusPlugin;
+  private book: any = null;
+  private rendition: any = null;
+  private readingStartTime = 0;
+  private timerInterval: ReturnType<typeof setInterval> | null = null;
 
-  constructor(leaf: WorkspaceLeaf, file: TFile, plugin: NexusPlugin) {
+  constructor(leaf: WorkspaceLeaf) {
     super(leaf);
-    this.file = file;
-    this.plugin = plugin;
+    this.file = _pendingFile;
+    this.plugin = _pendingPlugin!;
   }
 
-  getViewType(): string {
-    return NEXUS_EPUB_VIEW_TYPE;
-  }
-
-  getDisplayText(): string {
-    return this.file?.basename || "EPUB Reader";
-  }
-
-  getIcon(): string {
-    return "book-open";
-  }
+  getViewType() { return NEXUS_EPUB_VIEW_TYPE; }
+  getDisplayText() { return this.file?.basename || "EPUB"; }
+  getIcon() { return "book-open"; }
 
   async onOpen() {
-    this.readingStartTime = Date.now();
-    await this.renderEpub();
+    if (!this.file || !this.plugin) return;
+    await this.renderReader();
   }
 
   async onClose() {
-    this.recordReadingSession();
+    this.stopReading();
+    if (this.book) {
+      this.book.destroy();
+      this.book = null;
+    }
   }
 
-  private async recordReadingSession() {
-    if (this.readingStartTime <= 0) return;
-    const durationMs = Date.now() - this.readingStartTime;
-    if (durationMs < 5000) return; // Ignore < 5s sessions
+  private async renderReader() {
+    const container = this.contentEl;
+    container.empty();
+    container.addClass("nexus-epub-standalone");
 
-    const key = this.file.path;
+    // Toolbar
+    const toolbar = container.createDiv({ cls: "nexus-epub-toolbar" });
+    toolbar.createEl("span", {
+      text: this.file!.basename,
+      cls: "nexus-epub-title",
+    });
+
+    // Font size
+    const fontGroup = toolbar.createDiv({ cls: "nexus-epub-font-group" });
+    let fontSize = 100;
+    fontGroup.createEl("label", { text: "字号" });
+    const fontSlider = fontGroup.createEl("input", {
+      type: "range",
+      attr: { min: "80", max: "160", value: "100" },
+    }) as HTMLInputElement;
+    const fontLabel = fontGroup.createEl("span", { text: "100%" });
+
+    // Stats bar
+    const statsBar = container.createDiv({ cls: "nexus-epub-stats" });
+    const sessionLabel = statsBar.createEl("span", { text: "本次: 0s" });
+    const totalMs = this.plugin.settings.readingStats[this.file!.path]?.totalDurationMs || 0;
+    const totalLabel = statsBar.createEl("span", { text: `累计: ${formatTime(totalMs)}` });
+    const statusLabel = statsBar.createEl("span", { text: "状态: 未开始" });
+
+    // Content area - needs explicit height for epubjs
+    const readerArea = container.createDiv({ cls: "nexus-epub-content-area" });
+    readerArea.style.flex = "1";
+    readerArea.style.minHeight = "0";
+    readerArea.style.position = "relative";
+
+    // Navigation arrows
+    const navPrev = container.createDiv({ cls: "nexus-epub-nav nexus-epub-nav-prev" });
+    navPrev.innerHTML = "‹";
+    const navNext = container.createDiv({ cls: "nexus-epub-nav nexus-epub-nav-next" });
+    navNext.innerHTML = "›";
+
+    // Load epub
+    try {
+      const buffer = await this.app.vault.readBinary(this.file!);
+      this.book = ePub(buffer);
+
+      this.rendition = this.book.renderTo(readerArea, {
+        width: "100%",
+        height: "100%",
+      });
+
+      this.rendition.display();
+
+      // Theme
+      const isDark = document.body.classList.contains("theme-dark");
+      this.rendition.themes.override("color", isDark ? "#e2e8f0" : "#1e293b");
+      this.rendition.themes.override("background", isDark ? "#1e293b" : "#ffffff");
+
+      // Font size slider
+      fontSlider.addEventListener("input", () => {
+        fontSize = parseInt(fontSlider.value);
+        fontLabel.textContent = `${fontSize}%`;
+        this.rendition.themes.fontSize(`${fontSize}%`);
+      });
+
+      // Keyboard navigation
+      const handleKey = (e: KeyboardEvent) => {
+        if (e.key === "ArrowLeft") this.rendition.prev();
+        if (e.key === "ArrowRight") this.rendition.next();
+      };
+      document.addEventListener("keyup", handleKey);
+      this.register(() => document.removeEventListener("keyup", handleKey));
+
+      // Arrow button navigation
+      navPrev.addEventListener("click", () => this.rendition.prev());
+      navNext.addEventListener("click", () => this.rendition.next());
+
+      // Start reading
+      this.readingStartTime = Date.now();
+      statusLabel.textContent = "状态: 阅读中";
+      this.timerInterval = setInterval(() => {
+        const elapsed = Date.now() - this.readingStartTime;
+        sessionLabel.textContent = `本次: ${formatTime(elapsed)}`;
+      }, 1000);
+
+    } catch (e: any) {
+      container.createDiv({ text: `加载失败: ${e.message}` });
+    }
+  }
+
+  private stopReading() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    if (this.readingStartTime <= 0 || !this.file) return;
+    const durationMs = Date.now() - this.readingStartTime;
+    if (durationMs < 5000) return;
+
     const stats = this.plugin.settings.readingStats;
     const sessions = this.plugin.settings.readingSessions;
+    const key = this.file.path;
 
-    // Update stats
     if (!stats[key]) {
       stats[key] = {
         filePath: key,
@@ -59,7 +164,6 @@ export class EpubReaderView extends ItemView {
     stats[key].sessionCount += 1;
     stats[key].lastReadAt = new Date().toISOString();
 
-    // Record session
     const today = new Date();
     const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
     if (!sessions[dateKey]) sessions[dateKey] = [];
@@ -71,165 +175,17 @@ export class EpubReaderView extends ItemView {
       durationMs,
     });
 
-    await this.plugin.saveSettings();
+    this.plugin.saveSettings();
+    this.readingStartTime = 0;
   }
+}
 
-  private async renderEpub() {
-    const contentEl = this.contentEl;
-    contentEl.empty();
-    contentEl.addClass("nexus-epub-reader");
-
-    try {
-      const buffer = await this.app.vault.readBinary(this.file);
-      const JSZip: any = (await import("jszip") as any).default;
-      const zip = await JSZip.loadAsync(buffer);
-
-      // Parse container.xml to find OPF
-      const containerXml = await zip.file("META-INF/container.xml")?.async("text");
-      if (!containerXml) {
-        contentEl.createDiv({ text: "无效的 EPUB：缺少 container.xml" });
-        return;
-      }
-
-      const opfPath = this.parseContainerXml(containerXml);
-      if (!opfPath) {
-        contentEl.createDiv({ text: "无效的 EPUB：找不到 OPF 文件" });
-        return;
-      }
-
-      const opfContent = await zip.file(opfPath)?.async("text");
-      if (!opfContent) {
-        contentEl.createDiv({ text: "无效的 EPUB：无法读取 OPF" });
-        return;
-      }
-
-      const opf = this.parseOpf(opfContent, opfPath);
-
-      // Render sidebar TOC + content area
-      const reader = contentEl.createDiv({ cls: "nexus-epub-container" });
-
-      // TOC sidebar
-      const toc = reader.createDiv({ cls: "nexus-epub-toc" });
-      toc.createEl("h4", { text: "目录" });
-      const tocList = toc.createEl("ul", { cls: "nexus-epub-toc-list" });
-
-      // Content area
-      const content = reader.createDiv({ cls: "nexus-epub-content" });
-
-      // Load spine items
-      const spineItems: { href: string; title: string }[] = [];
-      for (const itemRef of opf.spine) {
-        const manifestItem = opf.manifest[itemRef];
-        if (manifestItem) {
-          spineItems.push({
-            href: manifestItem.href,
-            title: manifestItem.title || manifestItem.href,
-          });
-        }
-      }
-
-      // Render TOC
-      for (let i = 0; i < spineItems.length; i++) {
-        const item = spineItems[i];
-        const li = tocList.createEl("li");
-        const link = li.createEl("a", {
-          text: item.title,
-          cls: "nexus-epub-toc-link",
-        });
-        link.addEventListener("click", () => {
-          this.renderChapter(content, zip, opf.basePath, item.href);
-        });
-      }
-
-      // Render first chapter
-      if (spineItems.length > 0) {
-        await this.renderChapter(content, zip, opf.basePath, spineItems[0].href);
-      }
-    } catch (e) {
-      contentEl.createDiv({ text: `Error loading EPUB: ${e}` });
-    }
-  }
-
-  private async renderChapter(
-    container: HTMLElement,
-    zip: any,
-    basePath: string,
-    href: string
-  ) {
-    container.empty();
-    const fullPath = basePath ? `${basePath}/${href}` : href;
-    const html = await zip.file(fullPath)?.async("text");
-    if (!html) {
-      container.createDiv({ text: `Chapter not found: ${href}` });
-      return;
-    }
-
-    // Create iframe for isolated rendering
-    const iframe = container.createEl("iframe", {
-      cls: "nexus-epub-iframe",
-    });
-    iframe.style.width = "100%";
-    iframe.style.border = "none";
-    iframe.style.minHeight = "500px";
-
-    // Write HTML into iframe
-    const doc = iframe.contentDocument;
-    if (doc) {
-      doc.open();
-      doc.write(html);
-      doc.close();
-
-      // Inject base styles
-      const style = doc.createElement("style");
-      style.textContent = `
-        body {
-          font-family: var(--font-text), serif;
-          line-height: 1.8;
-          padding: 20px 40px;
-          max-width: 700px;
-          margin: 0 auto;
-          color: var(--text-normal);
-        }
-        img { max-width: 100%; height: auto; }
-      `;
-      doc.head.appendChild(style);
-    }
-  }
-
-  private parseContainerXml(xml: string): string | null {
-    const match = xml.match(/full-path="([^"]+)"/);
-    return match ? match[1] : null;
-  }
-
-  private parseOpf(xml: string, opfPath: string): {
-    basePath: string;
-    manifest: Record<string, { href: string; title?: string; mediaType: string }>;
-    spine: string[];
-  } {
-    const basePath = opfPath.includes("/")
-      ? opfPath.substring(0, opfPath.lastIndexOf("/"))
-      : "";
-
-    const manifest: Record<string, { href: string; title?: string; mediaType: string }> = {};
-    const spine: string[] = [];
-
-    // Parse manifest items
-    const manifestRegex = /<item\s+[^>]*id="([^"]+)"[^>]*href="([^"]+)"[^>]*media-type="([^"]+)"[^>]*\/?>/g;
-    let match;
-    while ((match = manifestRegex.exec(xml)) !== null) {
-      manifest[match[1]] = {
-        href: match[2],
-        mediaType: match[3],
-        title: match[2].replace(/\.\w+$/, "").replace(/[-_]/g, " "),
-      };
-    }
-
-    // Parse spine
-    const spineRegex = /<itemref\s+[^>]*idref="([^"]+)"[^>]*\/?>/g;
-    while ((match = spineRegex.exec(xml)) !== null) {
-      spine.push(match[1]);
-    }
-
-    return { basePath, manifest, spine };
-  }
+function formatTime(ms: number): string {
+  const s = Math.floor(ms / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return `${h}h ${String(m).padStart(2, "0")}m`;
+  if (m > 0) return `${m}m ${String(sec).padStart(2, "0")}s`;
+  return `${sec}s`;
 }

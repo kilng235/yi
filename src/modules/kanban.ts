@@ -1,6 +1,5 @@
 import { KanbanData, KanbanCard } from "../types";
 import { KanbanSync } from "../kanban-sync";
-import { InputModal } from "./input-modal";
 import { FilePickerModal } from "./file-picker-modal";
 import { App } from "obsidian";
 
@@ -34,7 +33,7 @@ export function renderKanban(
 
     const isLastColumn = data.columns.indexOf(col) === data.columns.length - 1;
     for (const card of col.cards) {
-      renderCard(cardsEl, card, col.name, sync, cleanupFns, isLastColumn);
+      renderCard(cardsEl, card, col.name, col.color, sync, cleanupFns, isLastColumn);
     }
 
     // Add file button
@@ -83,6 +82,7 @@ function renderCard(
   el: HTMLElement,
   card: KanbanCard,
   columnName: string,
+  columnColor: string,
   sync: KanbanSync,
   cleanupFns: Array<() => void>,
   isLastColumn: boolean = false
@@ -91,9 +91,13 @@ function renderCard(
   cardEl.draggable = true;
   cardEl.dataset.cardId = card.id;
 
+  // Set column color tint via inline style (more reliable than CSS variable)
+  cardEl.style.background = hexToRgba(columnColor, 0.08);
+
   // Mark as done if in last column or checked
   if (isLastColumn || card.checked) {
     cardEl.addClass("nexus-kanban-card--done");
+    cardEl.style.background = hexToRgba(columnColor, 0.04);
   }
 
   // Task checkbox
@@ -169,4 +173,12 @@ function renderCard(
       cls: "nexus-kanban-card-due",
     });
   }
+}
+
+function hexToRgba(hex: string, alpha: number): string {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }

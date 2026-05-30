@@ -1,5 +1,6 @@
 import { App, TFile } from "obsidian";
 import NexusPlugin from "../main";
+import { openEpubInNewLeaf } from "./epub-reader";
 
 interface BookEntry {
   file: TFile;
@@ -10,7 +11,8 @@ interface BookEntry {
 export function renderBookshelf(
   el: HTMLElement,
   app: App,
-  plugin: NexusPlugin
+  plugin: NexusPlugin,
+  _cleanupFns: Array<() => void>
 ) {
   el.empty();
   el.addClass("nexus-bookshelf");
@@ -18,7 +20,6 @@ export function renderBookshelf(
   const header = el.createDiv({ cls: "nexus-bookshelf-header" });
   header.createEl("h3", { text: "书架" });
 
-  // Scan vault for .epub files
   const epubFiles = app.vault
     .getFiles()
     .filter((f) => f.extension === "epub");
@@ -56,11 +57,10 @@ function renderBookCard(
 ) {
   const card = el.createDiv({ cls: "nexus-book-card" });
 
-  // Cover placeholder
+  // Cover
   const cover = card.createDiv({ cls: "nexus-book-cover" });
   cover.createDiv({ cls: "nexus-book-cover-placeholder", text: "📖" });
 
-  // Load cover async
   loadCover(entry.file, app).then((url) => {
     if (url) {
       cover.empty();
@@ -75,30 +75,25 @@ function renderBookCard(
     cls: "nexus-book-title",
   });
 
-  // Status badge
+  // Status
   const stats = plugin.settings.readingStats[entry.file.path];
   const statusText = stats
     ? formatReadingTime(stats.totalDurationMs)
     : "未开始阅读";
   card.createEl("div", { text: statusText, cls: "nexus-book-status" });
 
-  // Click to open with existing epub plugin
+  // Click → open in new tab
   card.addEventListener("click", () => {
-    app.workspace.getLeaf(false).openFile(entry.file);
+    openEpubInNewLeaf(entry.file, plugin);
   });
 }
 
-async function loadCover(
-  file: TFile,
-  app: App
-): Promise<string | null> {
+async function loadCover(file: TFile, app: App): Promise<string | null> {
   try {
     const buffer = await app.vault.readBinary(file);
-    // Use JSZip to extract cover
     const JSZip: any = (await import("jszip") as any).default;
     const zip = await JSZip.loadAsync(buffer);
 
-    // Look for cover image in common locations
     const coverPatterns = [
       /^OEBPS\/.*cover.*\.(jpg|jpeg|png|gif|webp)$/i,
       /^OEBPS\/images\/.*\.(jpg|jpeg|png|gif|webp)$/i,
@@ -114,7 +109,7 @@ async function loadCover(
       }
     }
   } catch (e) {
-    // Silently fail - show placeholder
+    // Silently fail
   }
   return null;
 }

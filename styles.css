@@ -77,21 +77,12 @@
 }
 
 /* ===== BANNER ===== */
-.nexus-banner {
-  border-radius: var(--nx-radius);
-  min-height: 120px;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: flex-end;
-  position: relative;
-  overflow: hidden;
-  background: linear-gradient(135deg, var(--nx-accent), var(--nx-accent-light));
-}
+/* Banner styles defined below in ROOT LAYOUT section */
 
 .nexus-banner--has-image {
   cursor: grab;
   background-size: cover;
-  background-position: center;
+  user-select: none;
 }
 
 .nexus-banner-overlay {
@@ -108,36 +99,225 @@
   text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
-/* ===== GRID ===== */
-.nexus-grid {
-  flex: 1;
-  min-height: 0;
+/* ===== ROOT LAYOUT ===== */
+.nexus-root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--nx-font);
+  background: var(--nx-bg);
+  color: var(--nx-text);
 }
 
-.nexus-cell {
+/* ===== BANNER ===== */
+.nexus-banner {
+  border-radius: var(--nx-radius);
+  min-height: 120px;
+  margin: 16px 16px 0;
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--nx-accent), var(--nx-accent-light));
+  flex-shrink: 0;
+}
+
+/* Banner settings button */
+.nexus-banner-settings-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 10;
+}
+
+.nexus-banner:hover .nexus-banner-settings-btn {
+  opacity: 1;
+}
+
+.nexus-banner-settings-btn--active {
+  opacity: 1 !important;
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* Banner settings panel */
+.nexus-banner-settings {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 260px;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  border-radius: 0 0 0 8px;
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  z-index: 20;
+  color: #e2e8f0;
+}
+
+.nexus-banner-settings--open {
+  max-height: 300px;
+  padding: 12px;
+}
+
+.nexus-banner-info {
+  padding: 4px 0 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  margin-bottom: 8px;
+}
+
+.nexus-banner-info-text {
+  font-size: 0.75em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.nexus-banner-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.nexus-banner-ctrl label {
+  font-size: 0.75em;
+  color: rgba(255, 255, 255, 0.7);
+  width: 65px;
+  flex-shrink: 0;
+}
+
+.nexus-banner-ctrl input[type="range"] {
+  flex: 1;
+  height: 4px;
+  accent-color: var(--nx-accent);
+}
+
+.nexus-banner-ctrl span {
+  font-size: 0.7em;
+  color: rgba(255, 255, 255, 0.5);
+  width: 36px;
+  text-align: right;
+}
+
+.nexus-banner-reset-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: #e2e8f0;
+  padding: 3px 10px;
+  font-size: 0.75em;
+  cursor: pointer;
+}
+
+.nexus-banner-reset-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.nexus-banner-btn-row {
+  display: flex;
+  gap: 8px;
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.nexus-banner-save-btn {
+  flex: 1;
+  background: var(--nx-accent);
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  padding: 3px 10px;
+  font-size: 0.75em;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.nexus-banner-save-btn:hover {
+  opacity: 0.85;
+}
+
+/* ===== BODY (two-column) ===== */
+.nexus-body {
+  display: flex;
+  gap: 16px;
+  padding: 12px 16px 16px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.nexus-left-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.nexus-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+/* ===== SECTIONS (right side) ===== */
+.nexus-section {
   background: var(--nx-bg-card);
   border: 1px solid var(--nx-border);
   border-radius: var(--nx-radius);
   box-shadow: var(--nx-shadow);
-  overflow: hidden;
+}
+
+.nexus-section-header {
   display: flex;
-  flex-direction: column;
-  transition: box-shadow 0.2s, transform 0.2s;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--nx-border);
 }
 
-.nexus-cell--dragging {
-  opacity: 0.5;
-  transform: scale(0.95);
+.nexus-section-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
-.nexus-cell--drag-over {
-  box-shadow: 0 0 0 2px var(--nx-accent);
+.nexus-section-dot--red { background: #ef4444; }
+.nexus-section-dot--yellow { background: #f59e0b; }
+.nexus-section-dot--blue { background: #3b82f6; }
+.nexus-section-dot--green { background: #10b981; }
+
+.nexus-section-title {
+  font-size: 0.9em;
+  font-weight: 600;
+}
+
+.nexus-section-body {
+  padding: 8px;
 }
 
 /* ===== KANBAN ===== */
 .nexus-kanban {
   padding: 12px;
-  height: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -247,7 +427,7 @@
 
 /* Completed column cards - dimmed with strikethrough */
 .nexus-kanban-card--done {
-  opacity: 0.6;
+  opacity: 0.45;
 }
 
 .nexus-kanban-card--done .nexus-kanban-card-title {
@@ -346,7 +526,6 @@
 /* ===== TODO ===== */
 .nexus-todo {
   padding: 12px;
-  height: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -418,7 +597,6 @@
 /* ===== HEATMAP (table calendar) ===== */
 .nexus-heatmap {
   padding: 14px;
-  height: 100%;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -431,14 +609,43 @@
   color: var(--nx-text-muted);
 }
 
-.nexus-heatmap-month-title {
+.nexus-heatmap-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 12px;
+}
+
+.nexus-heatmap-arrow {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--nx-text-muted);
+  transition: background 0.15s, color 0.15s;
+  user-select: none;
+}
+
+.nexus-heatmap-arrow:hover {
+  background: var(--nx-bg-card-hover);
+  color: var(--nx-text);
+}
+
+.nexus-heatmap-arrow--disabled {
+  opacity: 0.3;
+  pointer-events: none;
 }
 
 .nexus-heatmap-month-name {
   font-size: 0.85em;
   font-weight: 600;
   color: var(--nx-text);
+  min-width: 80px;
+  text-align: center;
 }
 
 /* Table layout */
@@ -446,7 +653,6 @@
   width: 100%;
   border-collapse: separate;
   border-spacing: 3px;
-  flex: 1;
 }
 
 .nexus-heatmap-th {
@@ -541,7 +747,6 @@
 }
 .nexus-bookshelf {
   padding: 12px;
-  height: 100%;
   display: flex;
   flex-direction: column;
 }
@@ -619,65 +824,396 @@
   padding: 2px 8px 6px;
 }
 
-/* ===== EPUB READER ===== */
-.nexus-epub-reader {
+/* ===== INLINE EPUB READER ===== */
+.nexus-epub-standalone {
+  display: flex;
+  flex-direction: column;
   height: 100%;
   overflow: hidden;
 }
 
-.nexus-epub-container {
+.nexus-epub-reader {
   display: flex;
+  flex-direction: column;
   height: 100%;
 }
 
-.nexus-epub-toc {
-  width: 220px;
-  border-right: 1px solid var(--nx-border);
-  overflow-y: auto;
-  padding: 12px;
-  flex-shrink: 0;
+.nexus-epub-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--nx-border);
+  background: var(--nx-bg-card);
+  flex-wrap: wrap;
 }
 
-.nexus-epub-toc h4 {
-  margin: 0 0 8px;
-  font-size: 0.9em;
-}
-
-.nexus-epub-toc-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.nexus-epub-toc-list li {
-  margin: 0;
-}
-
-.nexus-epub-toc-link {
-  display: block;
-  padding: 4px 8px;
-  font-size: 0.85em;
-  color: var(--nx-text-muted);
-  text-decoration: none;
-  border-radius: 4px;
+.nexus-epub-back-btn {
+  background: none;
+  border: 1px solid var(--nx-border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  color: var(--nx-text);
   cursor: pointer;
+  font-size: 0.8em;
 }
 
-.nexus-epub-toc-link:hover {
-  background: var(--nx-bg-card-hover);
+.nexus-epub-back-btn:hover {
+  border-color: var(--nx-accent);
+  color: var(--nx-accent);
+}
+
+.nexus-epub-title {
+  font-weight: 600;
+  font-size: 0.9em;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nexus-epub-font-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8em;
+  color: var(--nx-text-muted);
+}
+
+.nexus-epub-font-group input[type="range"] {
+  width: 80px;
+}
+
+.nexus-epub-stats {
+  display: flex;
+  gap: 12px;
+  padding: 6px 12px;
+  font-size: 0.75em;
+  color: var(--nx-text-muted);
+  border-bottom: 1px solid var(--nx-border);
+  background: var(--nx-bg-sidebar);
+}
+
+.nexus-epub-content-area {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.nexus-epub-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  font-size: 48px;
+  color: var(--nx-text-muted);
+  cursor: pointer;
+  padding: 20px 12px;
+  user-select: none;
+  opacity: 0.3;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.nexus-epub-nav:hover {
+  opacity: 1;
+  color: var(--nx-accent);
+}
+
+.nexus-epub-nav-prev {
+  left: 0;
+}
+
+.nexus-epub-nav-next {
+  right: 0;
+}
+
+/* ===== BALANCE ===== */
+.nexus-balance-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--nx-border);
+}
+
+.nexus-balance-body {
+  padding: 14px;
+}
+
+.nexus-balance-empty {
+  color: var(--nx-text-muted);
+  font-size: 0.8em;
+  text-align: center;
+  padding: 12px;
+}
+
+.nexus-balance-loading {
+  color: var(--nx-text-muted);
+  font-size: 0.8em;
+  text-align: center;
+  padding: 12px;
+}
+
+.nexus-balance-main {
+  margin-bottom: 10px;
+}
+
+.nexus-balance-amount {
+  font-size: 1.8em;
+  font-weight: 700;
   color: var(--nx-text);
 }
 
-.nexus-epub-content {
-  flex: 1;
-  overflow-y: auto;
+.nexus-balance-bar-bg {
+  width: 100%;
+  height: 6px;
+  background: var(--nx-border);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.nexus-balance-bar {
+  height: 100%;
+  background: var(--nx-accent);
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+
+.nexus-balance-detail {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.nexus-balance-tag {
+  font-size: 0.75em;
+  color: var(--nx-text-muted);
+  background: var(--nx-bg-sidebar);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.nexus-balance-status {
+  font-size: 0.75em;
+}
+
+.nexus-balance-ok {
+  color: #10b981;
+}
+
+.nexus-balance-off {
+  color: #ef4444;
+}
+
+/* ===== SIDEBAR (Quick Links + Recent) ===== */
+.nexus-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: fit-content;
+}
+
+.nexus-sidebar-section {
+  background: var(--nx-bg-card);
+  border: 1px solid var(--nx-border);
+  border-radius: var(--nx-radius);
+  box-shadow: var(--nx-shadow);
+  padding: 0;
+  overflow: hidden;
+}
+
+.nexus-sidebar-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.9em;
+  font-weight: 600;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--nx-border);
+}
+
+.nexus-sidebar-title::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.nexus-sidebar-section:nth-child(1) .nexus-sidebar-title::before {
+  background: #3b82f6;
+}
+
+.nexus-sidebar-section:nth-child(2) .nexus-sidebar-title::before {
+  background: #f59e0b;
+}
+
+.nexus-sidebar-title--balance::before {
+  background: #10b981;
+}
+
+.nexus-sidebar-add-btn {
+  text-align: center;
+  padding: 8px;
+  color: var(--nx-text-muted);
+  font-size: 0.8em;
+  cursor: pointer;
+  border-top: 1px solid var(--nx-border);
+}
+
+.nexus-sidebar-add-btn:hover {
+  color: var(--nx-accent);
+  background: var(--nx-bg-card-hover);
+}
+
+.nexus-sidebar-empty {
+  color: var(--nx-text-muted);
+  font-size: 0.8em;
+  text-align: center;
   padding: 16px;
 }
 
-.nexus-epub-iframe {
-  width: 100%;
+/* Quick Links */
+.nexus-quick-links {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+}
+
+.nexus-quick-link-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  transition: background 0.15s;
+}
+
+.nexus-quick-link-item:hover {
+  background: var(--nx-bg-card-hover);
+}
+
+.nexus-quick-link-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.nexus-quick-link-icon {
+  font-size: 0.9em;
+  flex-shrink: 0;
+}
+
+.nexus-quick-link-name {
+  font-size: 0.85em;
+  color: var(--nx-text);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.nexus-quick-link-name:hover {
+  color: var(--nx-accent);
+}
+
+.nexus-quick-link-delete {
+  display: none;
+  background: none;
   border: none;
-  min-height: 500px;
+  color: var(--nx-text-muted);
+  cursor: pointer;
+  font-size: 0.9em;
+  padding: 0 2px;
+  border-radius: 4px;
+}
+
+.nexus-quick-link-item:hover .nexus-quick-link-delete {
+  display: block;
+}
+
+.nexus-quick-link-delete:hover {
+  color: #ef4444;
+}
+
+/* Recently Edited */
+.nexus-recent-list {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+}
+
+.nexus-recent-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 14px;
+  transition: background 0.15s;
+  cursor: pointer;
+}
+
+.nexus-recent-item:hover {
+  background: var(--nx-bg-card-hover);
+}
+
+.nexus-recent-name {
+  font-size: 0.85em;
+  color: var(--nx-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.nexus-recent-name:hover {
+  color: var(--nx-accent);
+}
+
+.nexus-recent-time {
+  font-size: 0.7em;
+  color: var(--nx-text-muted);
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+/* Sidebar Balance */
+.nexus-sidebar-balance {
+  padding: 10px 14px;
+}
+
+.nexus-sidebar-balance-empty,
+.nexus-sidebar-balance-loading {
+  color: var(--nx-text-muted);
+  font-size: 0.8em;
+  text-align: center;
+  padding: 8px;
+}
+
+.nexus-sidebar-balance-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nexus-sidebar-balance-amount {
+  font-size: 1.2em;
+  font-weight: 700;
+  color: var(--nx-text);
+}
+
+.nexus-sidebar-balance-ok {
+  font-size: 0.75em;
+  color: #10b981;
+}
+
+.nexus-sidebar-balance-off {
+  font-size: 0.75em;
+  color: #ef4444;
 }
 
 /* ===== FILE PICKER ===== */
@@ -778,16 +1314,5 @@
 
   .nexus-kanban-board {
     flex-direction: column;
-  }
-
-  .nexus-epub-container {
-    flex-direction: column;
-  }
-
-  .nexus-epub-toc {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid var(--nx-border);
-    max-height: 200px;
   }
 }

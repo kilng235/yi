@@ -116,7 +116,11 @@ export class KanbanSync {
     }
     if (!moved) return;
     const target = cols.find((c) => c.name === toColumn);
-    if (!target) return;
+    if (!target) {
+      // Put card back in source column
+      cols[sourceIndex >= 0 ? sourceIndex : 0].cards.splice(sourceIndex >= 0 ? sourceIndex : 0, 0, moved);
+      return;
+    }
     // Auto-mark completed when moved to last column
     const isLastColumn = cols.indexOf(target) === cols.length - 1;
     if (isLastColumn) {
