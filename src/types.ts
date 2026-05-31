@@ -17,7 +17,6 @@ export interface NexusSettings {
   heatmapWeights: HeatmapWeights;
   readingStats: Record<string, ReadingStat>;
   readingSessions: Record<string, ReadingSession[]>;
-  activityLog: Record<string, { cardComplete: number; todoCheck: number; cardCreate: number; noteEdit: number; noteCreate: number }>;
   language: "en" | "zh";
   stylePreset: string;
   quickLinks: QuickLink[];
@@ -25,7 +24,7 @@ export interface NexusSettings {
 }
 
 export const DEFAULT_SETTINGS: NexusSettings = {
-  kanbanFile: "nexus-kanban",
+  kanbanFile: "nexus/nexus-kanban",
   bannerImage: "",
   bannerQuote: "Your daily command center",
   bannerPosition: { x: 50, y: 50 },
@@ -46,7 +45,6 @@ export const DEFAULT_SETTINGS: NexusSettings = {
   },
   readingStats: {},
   readingSessions: {},
-  activityLog: {},
   language: "zh",
   stylePreset: "nordic",
   quickLinks: [

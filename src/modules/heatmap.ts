@@ -1,12 +1,13 @@
 import { NexusSettings } from "../types";
+import { ActivityLog } from "../activity-log";
 
 const DAY_NAMES = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
 
-export function renderHeatmap(el: HTMLElement, settings: NexusSettings) {
+export function renderHeatmap(el: HTMLElement, settings: NexusSettings, activityLog?: ActivityLog) {
   el.empty();
   el.addClass("nexus-heatmap");
 
-  const scores = buildDailyScores(settings);
+  const scores = buildDailyScores(settings, activityLog);
   const now = new Date();
   let viewYear = now.getFullYear();
   let viewMonth = now.getMonth(); // 0-indexed
@@ -119,7 +120,7 @@ function getMonthScores(scores: Record<string, number>, year: number, month: num
   return result;
 }
 
-function buildDailyScores(settings: NexusSettings): Record<string, number> {
+function buildDailyScores(settings: NexusSettings, activityLog?: ActivityLog): Record<string, number> {
   const scores: Record<string, number> = {};
   const w = settings.heatmapWeights;
 
@@ -129,7 +130,8 @@ function buildDailyScores(settings: NexusSettings): Record<string, number> {
     scores[dateKey] = (scores[dateKey] || 0) + points;
   }
 
-  for (const [dateKey, activity] of Object.entries(settings.activityLog || {})) {
+  const log = activityLog || {};
+  for (const [dateKey, activity] of Object.entries(log)) {
     const points =
       (activity.cardComplete || 0) * w.cardComplete +
       (activity.cardCreate || 0) * w.cardCreate +

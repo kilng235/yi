@@ -8,7 +8,7 @@ export default class NexusPlugin extends Plugin {
 
   async onload() {
     await this.loadSettings();
-    this.backfillActivityFromVault();
+    await this.backfillActivityFromVault();
 
     this.registerView(NEXUS_VIEW_TYPE, (leaf) => new NexusView(leaf, this));
     this.registerView(NEXUS_EPUB_VIEW_TYPE, (leaf) => new EpubReaderView(leaf));
@@ -29,19 +29,17 @@ export default class NexusPlugin extends Plugin {
   onunload() {}
 
   async loadSettings() {
-    const loaded = await this.loadData();
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, loaded);
-    if (loaded?.heatmapWeights) {
-      this.settings.heatmapWeights = Object.assign({}, DEFAULT_SETTINGS.heatmapWeights, loaded.heatmapWeights);
-    }
+    const localData = await this.loadData();
+    const externalData = await loadExternalConfig(this.app);
+    this.settings = mergeSettings(externalData, localData);
   }
 
   async saveSettings() {
-    await this.saveData(this.settings);
+    await saveExternalConfig(this.app, this.settings);
   }
 
-  private backfillActivityFromVault() {
-    const log = this.settings.activityLog;
+  private async backfillActivityFromVault() {
+    const log = await loadActivityLog(this.app);
     const now = Date.now();
     const thirtyDaysAgo = now - 30 * 24 * 60 * 60 * 1000;
 
@@ -72,7 +70,7 @@ export default class NexusPlugin extends Plugin {
     }
 
     if (changed) {
-      this.saveSettings();
+      await saveActivityLog(this.app, log);
     }
   }
 
@@ -154,3 +152,5 @@ class NexusSettingTab extends PluginSettingTab {
       );
   }
 }
+import { loadExternalConfig, saveExternalConfig, mergeSettings } from "./config-sync";
+import { loadActivityLog, saveActivityLog, todayKey } from "./activity-log";

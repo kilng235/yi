@@ -15,6 +15,7 @@ export class NexusView extends ItemView {
   kanbanSync: KanbanSync;
   kanbanData: KanbanData | null = null;
   cleanupFns: Array<() => void> = [];
+  activityLog: ActivityLog = {};
 
   constructor(leaf: WorkspaceLeaf, plugin: NexusPlugin) {
     super(leaf);
@@ -28,17 +29,16 @@ export class NexusView extends ItemView {
 
   async onOpen() {
     this.kanbanSync.updateSettings(this.plugin.settings);
+    this.activityLog = await loadActivityLog(this.app);
     this.kanbanSync.setActivityCallback((type: string) => {
-      const today = new Date();
-      const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-      const log = this.plugin.settings.activityLog;
-      if (!log[key]) log[key] = { cardComplete: 0, todoCheck: 0, cardCreate: 0, noteEdit: 0, noteCreate: 0 };
-      if (type === "todoCheck") log[key].todoCheck++;
-      if (type === "cardComplete") log[key].cardComplete++;
-      if (type === "cardCreate") log[key].cardCreate++;
-      if (type === "noteEdit") log[key].noteEdit++;
-      if (type === "noteCreate") log[key].noteCreate++;
-      this.plugin.saveSettings();
+      const key = todayKey();
+      if (!this.activityLog[key]) this.activityLog[key] = { cardComplete: 0, todoCheck: 0, cardCreate: 0, noteEdit: 0, noteCreate: 0 };
+      if (type === "todoCheck") this.activityLog[key].todoCheck++;
+      if (type === "cardComplete") this.activityLog[key].cardComplete++;
+      if (type === "cardCreate") this.activityLog[key].cardCreate++;
+      if (type === "noteEdit") this.activityLog[key].noteEdit++;
+      if (type === "noteCreate") this.activityLog[key].noteCreate++;
+      saveActivityLog(this.app, this.activityLog);
     });
     this.kanbanSync.onDataUpdate((data) => {
       this.kanbanData = data;
@@ -76,13 +76,11 @@ export class NexusView extends ItemView {
   }
 
   private recordActivity(type: string) {
-    const today = new Date();
-    const key = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-    const log = this.plugin.settings.activityLog;
-    if (!log[key]) log[key] = { cardComplete: 0, todoCheck: 0, cardCreate: 0, noteEdit: 0, noteCreate: 0 };
-    if (type === "noteEdit") log[key].noteEdit++;
-    if (type === "noteCreate") log[key].noteCreate++;
-    this.plugin.saveSettings();
+    const key = todayKey();
+    if (!this.activityLog[key]) this.activityLog[key] = { cardComplete: 0, todoCheck: 0, cardCreate: 0, noteEdit: 0, noteCreate: 0 };
+    if (type === "noteEdit") this.activityLog[key].noteEdit++;
+    if (type === "noteCreate") this.activityLog[key].noteCreate++;
+    saveActivityLog(this.app, this.activityLog);
   }
 
   runCleanup() {
@@ -132,7 +130,7 @@ export class NexusView extends ItemView {
     heatmapHeader.createDiv({ cls: "nexus-section-dot nexus-section-dot--yellow" });
     heatmapHeader.createEl("span", { text: "活跃度", cls: "nexus-section-title" });
     const heatmapBody = heatmapSection.createDiv({ cls: "nexus-section-body" });
-    renderHeatmap(heatmapBody, this.plugin.settings);
+    renderHeatmap(heatmapBody, this.plugin.settings, this.activityLog);
 
     // Bookshelf section
     const bookSection = main.createDiv({ cls: "nexus-section" });
@@ -143,3 +141,4 @@ export class NexusView extends ItemView {
     renderBookshelf(bookBody, this.app, this.plugin, this.cleanupFns);
   }
 }
+import { loadActivityLog, saveActivityLog, todayKey, ActivityLog } from "./activity-log";
