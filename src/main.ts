@@ -139,6 +139,19 @@ class NexusSettingTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
+      .setName("主题")
+      .setDesc("当前仅保留 Aurora 紫雾主题")
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("aurora", "Aurora 紫雾")
+          .setValue(this.plugin.settings.stylePreset)
+          .onChange(async (value: "aurora") => {
+            this.plugin.settings.stylePreset = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
       .setName("DeepSeek API Key")
       .setDesc("用于余额查询，不会上传到任何地方")
       .addText((text) =>

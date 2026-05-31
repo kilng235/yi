@@ -121,7 +121,7 @@ export class NexusView extends ItemView {
     todoHeader.createEl("span", { text: "待办事项", cls: "nexus-section-title" });
     const todoBody = todoSection.createDiv({ cls: "nexus-section-body" });
     if (this.kanbanData) {
-      renderTodo(todoBody, this.kanbanData, this.kanbanSync, this.app, this.cleanupFns);
+      renderTodo(todoBody, this.kanbanData, this.kanbanSync, this.app, this.activityLog, this.cleanupFns);
     }
 
     // Heatmap section

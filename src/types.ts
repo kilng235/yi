@@ -18,7 +18,7 @@ export interface NexusSettings {
   readingStats: Record<string, ReadingStat>;
   readingSessions: Record<string, ReadingSession[]>;
   language: "en" | "zh";
-  stylePreset: string;
+  stylePreset: "aurora";
   quickLinks: QuickLink[];
   deepseekApiKey: string;
 }
@@ -46,7 +46,7 @@ export const DEFAULT_SETTINGS: NexusSettings = {
   readingStats: {},
   readingSessions: {},
   language: "zh",
-  stylePreset: "nordic",
+  stylePreset: "aurora",
   quickLinks: [
     { name: "GitHub", url: "https://github.com", icon: "🔗" },
   ],
