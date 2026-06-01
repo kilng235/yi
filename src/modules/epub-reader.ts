@@ -1,25 +1,28 @@
 import { ItemView, WorkspaceLeaf, TFile } from "obsidian";
 import NexusPlugin from "../main";
 import ePub from "epubjs";
+import { formatDuration } from "../utils";
+import { getEpubFilePathFromState, getEpubReaderErrorMessage } from "../epub-reader-state";
 
 export const NEXUS_EPUB_VIEW_TYPE = "nexus-epub-reader";
 
-// Module-level state to pass data to the view factory
-let _pendingFile: TFile | null = null;
-let _pendingPlugin: NexusPlugin | null = null;
+// Single plugin reference used for stats persistence after state-driven file restore
+let _plugin: NexusPlugin | null = null;
 
 export function openEpubInNewLeaf(file: TFile, plugin: NexusPlugin) {
-  _pendingFile = file;
-  _pendingPlugin = plugin;
+  _plugin = plugin;
   const leaf = plugin.app.workspace.getLeaf(true);
-  leaf.setViewState({ type: NEXUS_EPUB_VIEW_TYPE, active: true });
-  _pendingFile = null;
-  _pendingPlugin = null;
+  leaf.setViewState({
+    type: NEXUS_EPUB_VIEW_TYPE,
+    active: true,
+    state: { filePath: file.path },
+  });
 }
 
 export class EpubReaderView extends ItemView {
-  file: TFile | null;
-  plugin: NexusPlugin;
+  file: TFile | null = null;
+  plugin: NexusPlugin | null = null;
+  private filePath: string | null = null;
   private book: any = null;
   private rendition: any = null;
   private readingStartTime = 0;
@@ -27,8 +30,13 @@ export class EpubReaderView extends ItemView {
 
   constructor(leaf: WorkspaceLeaf) {
     super(leaf);
-    this.file = _pendingFile;
-    this.plugin = _pendingPlugin!;
+  }
+
+  async setState(state: any, result: any): Promise<void> {
+    this.filePath = getEpubFilePathFromState(state);
+    this.file = this.filePath ? this.app.vault.getFileByPath(this.filePath) || null : null;
+    this.plugin = _plugin;
+    return super.setState(state, result);
   }
 
   getViewType() { return NEXUS_EPUB_VIEW_TYPE; }
@@ -36,7 +44,14 @@ export class EpubReaderView extends ItemView {
   getIcon() { return "book-open"; }
 
   async onOpen() {
-    if (!this.file || !this.plugin) return;
+    if (!this.file) {
+      this.renderError(getEpubReaderErrorMessage(this.filePath));
+      return;
+    }
+    if (!this.plugin) {
+      this.renderError("EPUB 阅读器未完成初始化");
+      return;
+    }
     await this.renderReader();
   }
 
@@ -46,6 +61,13 @@ export class EpubReaderView extends ItemView {
       this.book.destroy();
       this.book = null;
     }
+  }
+
+  private renderError(message: string) {
+    const container = this.contentEl;
+    container.empty();
+    container.addClass("nexus-epub-standalone");
+    container.createDiv({ cls: "nexus-epub-error", text: message });
   }
 
   private async renderReader() {
@@ -73,8 +95,8 @@ export class EpubReaderView extends ItemView {
     // Stats bar
     const statsBar = container.createDiv({ cls: "nexus-epub-stats" });
     const sessionLabel = statsBar.createEl("span", { text: "本次: 0s" });
-    const totalMs = this.plugin.settings.readingStats[this.file!.path]?.totalDurationMs || 0;
-    const totalLabel = statsBar.createEl("span", { text: `累计: ${formatTime(totalMs)}` });
+    const totalMs = this.plugin?.settings.readingStats[this.file!.path]?.totalDurationMs || 0;
+    const totalLabel = statsBar.createEl("span", { text: `累计: ${formatDuration(totalMs)}` });
     const statusLabel = statsBar.createEl("span", { text: "状态: 未开始" });
 
     // Content area - needs explicit height for epubjs
@@ -130,7 +152,7 @@ export class EpubReaderView extends ItemView {
       statusLabel.textContent = "状态: 阅读中";
       this.timerInterval = setInterval(() => {
         const elapsed = Date.now() - this.readingStartTime;
-        sessionLabel.textContent = `本次: ${formatTime(elapsed)}`;
+        sessionLabel.textContent = `本次: ${formatDuration(elapsed)}`;
       }, 1000);
 
     } catch (e: any) {
@@ -143,7 +165,7 @@ export class EpubReaderView extends ItemView {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
-    if (this.readingStartTime <= 0 || !this.file) return;
+    if (this.readingStartTime <= 0 || !this.file || !this.plugin) return;
     const durationMs = Date.now() - this.readingStartTime;
     if (durationMs < 5000) return;
 
@@ -180,12 +202,3 @@ export class EpubReaderView extends ItemView {
   }
 }
 
-function formatTime(ms: number): string {
-  const s = Math.floor(ms / 1000);
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  if (h > 0) return `${h}h ${String(m).padStart(2, "0")}m`;
-  if (m > 0) return `${m}m ${String(sec).padStart(2, "0")}s`;
-  return `${sec}s`;
-}
