@@ -1,5 +1,6 @@
 import { App, TFile } from "obsidian";
 import { KanbanData, KanbanColumn, KanbanCard, NexusSettings } from "./types";
+import { deriveCardCheckedState, getTodoCheckDelta } from "./todo-completion";
 
 const HASH_FN = (s: string): number => {
   let h = 0;
@@ -75,11 +76,13 @@ export class KanbanSync {
   async toggleCard(cardId: string, checked: boolean) {
     if (!this.data) return;
     const cols = this.data.columns;
-    let moved = false;
+    let changed = false;
     for (let ci = 0; ci < cols.length; ci++) {
       const idx = cols[ci].cards.findIndex((c) => c.id === cardId);
       if (idx !== -1) {
         const card = cols[ci].cards[idx];
+        const previousChecked = card.checked;
+        const previousCompletedAt = card.completedAt;
         card.checked = checked;
         card.completedAt = checked ? new Date().toISOString().slice(0, 10) : "";
         for (const task of card.tasks) {
@@ -91,12 +94,14 @@ export class KanbanSync {
           cols[ci].cards.splice(idx, 1);
           cols[targetIndex].cards.push(card);
         }
-        moved = true;
+        const delta = getTodoCheckDelta(previousChecked, checked, previousCompletedAt);
+        if (delta === 1 && this.onActivity) this.onActivity("todoCheck");
+        if (delta === -1 && this.onActivity) this.onActivity("todoUncheck");
+        changed = previousChecked !== checked || previousCompletedAt !== card.completedAt || ci !== targetIndex;
         break;
       }
     }
-    if (checked && this.onActivity) this.onActivity("todoCheck");
-    if (moved) await this.writeToDisk();
+    if (changed) await this.writeToDisk();
   }
 
   async moveCard(cardId: string, toColumn: string, toIndex: number) {
@@ -295,6 +300,8 @@ date: ${new Date().toISOString().slice(0, 10)}
     let currentCardTasks: { text: string; checked: boolean }[] = [];
     let currentCardLines: string[] = [];
 
+    let inBody = false;
+
     const flushCard = () => {
       if (currentCard && currentColumn && currentCard.title) {
         const card: KanbanCard = {
@@ -304,7 +311,7 @@ date: ${new Date().toISOString().slice(0, 10)}
           body: currentCardLines.join("\n").trim(),
           tags: currentCard.tags || [],
           dueDate: currentCard.dueDate || "",
-          checked: currentCardTasks.length > 0 ? currentCardTasks.every((t) => t.checked) : false,
+          checked: deriveCardCheckedState(currentCardTasks, (currentCard as any).completedAt || ""),
           createdAt: currentCard.createdAt || "",
           completedAt: (currentCard as any).completedAt || "",
           tasks: currentCardTasks,
@@ -314,6 +321,7 @@ date: ${new Date().toISOString().slice(0, 10)}
       currentCard = null;
       currentCardTasks = [];
       currentCardLines = [];
+      inBody = false;
     };
 
     for (let i = frontmatterEnd + 1; i < lines.length; i++) {
@@ -330,41 +338,48 @@ date: ${new Date().toISOString().slice(0, 10)}
 
       if (!currentColumn) continue;
 
-      // ### Card heading
+      // ### Card heading — only if NOT inside card body
       if (line.startsWith("### ")) {
-        flushCard();
-        currentCard = {
-          title: line.slice(4).trim(),
-          type: "note",
-          tags: [],
-          dueDate: "",
-          createdAt: "",
-        };
+        if (inBody) {
+          // Body content that happens to look like a heading
+          currentCardLines.push(line);
+        } else {
+          flushCard();
+          currentCard = {
+            title: line.slice(4).trim(),
+            type: "note",
+            tags: [],
+            dueDate: "",
+            createdAt: "",
+          };
+        }
         continue;
       }
 
       if (!currentCard) continue;
 
-      // Card metadata lines
-      const typeMatch = line.match(/^type:\s*(task|note|project)/);
-      if (typeMatch) {
-        currentCard.type = typeMatch[1] as any;
-        continue;
-      }
-      const dateMatch = line.match(/^date:\s*(.+)/);
-      if (dateMatch) {
-        currentCard.createdAt = dateMatch[1].trim();
-        continue;
-      }
-      const tagMatch = line.match(/^tags:\s*(.+)/);
-      if (tagMatch) {
-        currentCard.tags = tagMatch[1].split(",").map((t) => t.trim());
-        continue;
-      }
-      const completedMatch = line.match(/^completed:\s*(.+)/);
-      if (completedMatch && currentCard) {
-        currentCard.completedAt = completedMatch[1].trim();
-        continue;
+      // Card metadata lines (only before body content starts)
+      if (!inBody) {
+        const typeMatch = line.match(/^type:\s*(task|note|project)/);
+        if (typeMatch) {
+          currentCard.type = typeMatch[1] as any;
+          continue;
+        }
+        const dateMatch = line.match(/^date:\s*(.+)/);
+        if (dateMatch) {
+          currentCard.createdAt = dateMatch[1].trim();
+          continue;
+        }
+        const tagMatch = line.match(/^tags:\s*(.+)/);
+        if (tagMatch) {
+          currentCard.tags = tagMatch[1].split(",").map((t) => t.trim());
+          continue;
+        }
+        const completedMatch = line.match(/^completed:\s*(.+)/);
+        if (completedMatch && currentCard) {
+          currentCard.completedAt = completedMatch[1].trim();
+          continue;
+        }
       }
 
       // Task items
@@ -377,8 +392,9 @@ date: ${new Date().toISOString().slice(0, 10)}
         continue;
       }
 
-      // Body lines
+      // Body lines — first non‑metadata, non‑task line enters body mode
       if (line.trim()) {
+        inBody = true;
         currentCardLines.push(line);
       }
     }

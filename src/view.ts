@@ -34,6 +34,7 @@ export class NexusView extends ItemView {
       const key = todayKey();
       if (!this.activityLog[key]) this.activityLog[key] = { cardComplete: 0, todoCheck: 0, cardCreate: 0, noteEdit: 0, noteCreate: 0 };
       if (type === "todoCheck") this.activityLog[key].todoCheck++;
+      if (type === "todoUncheck") this.activityLog[key].todoCheck = Math.max(0, this.activityLog[key].todoCheck - 1);
       if (type === "cardComplete") this.activityLog[key].cardComplete++;
       if (type === "cardCreate") this.activityLog[key].cardCreate++;
       if (type === "noteEdit") this.activityLog[key].noteEdit++;
@@ -102,7 +103,7 @@ export class NexusView extends ItemView {
     if (this.plugin.settings.bannerHeight) {
       bannerEl.style.minHeight = `${this.plugin.settings.bannerHeight}px`;
     }
-    renderBanner(bannerEl, this.plugin.settings, this.app);
+    renderBanner(bannerEl, this.plugin.settings, this.app, () => this.plugin.saveSettings());
 
     // Two-column layout
     const body = container.createDiv({ cls: "nexus-body" });

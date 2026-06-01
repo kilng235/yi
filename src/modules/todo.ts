@@ -41,7 +41,7 @@ export function renderTodo(
   });
   statsEl.createEl("span", {
     cls: "nexus-todo-stat nexus-todo-stat--completed",
-    text: `已完成 ${completedCount}`,
+    text: `本月完成 ${completedCount}`,
   });
 
   // Add task button
