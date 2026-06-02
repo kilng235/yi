@@ -81,6 +81,7 @@ export interface ReadingStat {
   totalDurationMs: number;
   sessionCount: number;
   lastReadAt: string;
+  lastLocationCfi?: string;
 }
 
 export interface ReadingSession {

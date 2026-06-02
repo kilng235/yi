@@ -40,7 +40,7 @@ export class EpubReaderView extends ItemView {
     this.plugin = _plugin;
     this.stateReady = true;
     await super.setState(state, result);
-    // If onOpen already ran before state was ready, trigger rendering now
+    // setState is the authoritative state — always render, even if onOpen already ran
     if (!this.file) {
       this.renderError(getEpubReaderErrorMessage(this.filePath));
       return;
@@ -57,22 +57,17 @@ export class EpubReaderView extends ItemView {
   getIcon() { return "book-open"; }
 
   async onOpen() {
-    // Defer if setState hasn't been called yet — happens when Obsidian calls
-    // onOpen before setState during view construction
-    if (shouldDeferEpubOpenError(this.filePath, this.stateReady)) {
-      return;
-    }
-    // If setState already rendered, skip redundant render
-    if (this.contentEl.children.length > 0) return;
-    if (!this.file) {
-      this.renderError(getEpubReaderErrorMessage(this.filePath));
-      return;
-    }
-    if (!this.plugin) {
-      this.renderError("EPUB 阅读器未完成初始化");
-      return;
-    }
-    await this.renderReader();
+    // setState is the authoritative render trigger.
+    // If it already ran, it already rendered. If not, wait for it.
+    // Fallback: if setState is never called (edge case), try rendering after 2s.
+    if (this.stateReady) return; // setState already rendered
+    setTimeout(() => {
+      if (!this.stateReady && this.contentEl.children.length === 0) {
+        if (this.file && this.plugin) {
+          this.renderReader();
+        }
+      }
+    }, 2000);
   }
 
   async onClose() {
@@ -141,20 +136,24 @@ export class EpubReaderView extends ItemView {
         height: "100%",
       });
 
-      this.rendition.display();
-
-      // Restore reading position from last session
-      const savedCfi = this.plugin!.settings.readingStats[this.file!.path]?.lastLocationCfi;
-      if (savedCfi) {
-        this.rendition.display(savedCfi);
-      }
-
-      // Track current position for save on close
+      // Track current position for save on close (register BEFORE display)
       this.rendition.on("relocated", (location: any) => {
         if (location?.start?.cfi) {
           this.lastCfi = location.start.cfi;
         }
       });
+
+      // Restore reading position from last session, or start from beginning
+      const savedCfi = this.plugin!.settings.readingStats[this.file!.path]?.lastLocationCfi;
+      await this.rendition.display(savedCfi || undefined);
+
+      // Fallback: capture current position after display (in case relocated doesn't fire)
+      setTimeout(() => {
+        const currentLoc = this.rendition?.currentLocation();
+        if (currentLoc?.start?.cfi && !this.lastCfi) {
+          this.lastCfi = currentLoc.start.cfi;
+        }
+      }, 500);
 
       // Theme
       const isDark = document.body.classList.contains("theme-dark");
@@ -198,14 +197,32 @@ export class EpubReaderView extends ItemView {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
-    if (this.readingStartTime <= 0 || !this.file || !this.plugin) return;
-    const durationMs = Date.now() - this.readingStartTime;
-    if (durationMs < 5000) return;
+    if (!this.file || !this.plugin) return;
 
     const stats = this.plugin.settings.readingStats;
-    const sessions = this.plugin.settings.readingSessions;
     const key = this.file.path;
 
+    // Always save CFI position if available (even if reading time was short)
+    if (this.lastCfi) {
+      if (!stats[key]) {
+        stats[key] = {
+          filePath: key,
+          title: this.file.basename,
+          totalDurationMs: 0,
+          sessionCount: 0,
+          lastReadAt: "",
+        };
+      }
+      stats[key].lastLocationCfi = this.lastCfi;
+      this.plugin.saveSettings();
+    }
+
+    // Only record reading session if duration >= 1s
+    if (this.readingStartTime <= 0) return;
+    const durationMs = Date.now() - this.readingStartTime;
+    if (durationMs < 1000) return;
+
+    const sessions = this.plugin.settings.readingSessions;
     if (!stats[key]) {
       stats[key] = {
         filePath: key,
@@ -218,9 +235,6 @@ export class EpubReaderView extends ItemView {
     stats[key].totalDurationMs += durationMs;
     stats[key].sessionCount += 1;
     stats[key].lastReadAt = new Date().toISOString();
-    if (this.lastCfi) {
-      stats[key].lastLocationCfi = this.lastCfi;
-    }
 
     const today = new Date();
     const dateKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
