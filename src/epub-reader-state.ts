@@ -1,12 +1,10 @@
 export function getEpubFilePathFromState(state: unknown): string | null {
-  console.log("[Nexus EPUB] getEpubFilePathFromState called with:", state);
   if (!state || typeof state !== "object") return null;
   // 尝试从嵌套的state结构中提取filePath
   const stateObj = state as { state?: unknown; filePath?: unknown };
   // 先检查直接的filePath属性
   if (typeof stateObj.filePath === "string") {
     const trimmed = stateObj.filePath.trim();
-    console.log("[Nexus EPUB] Found filePath at top level:", trimmed);
     return trimmed ? trimmed : null;
   }
   // 再检查嵌套的state对象中的filePath
@@ -14,11 +12,9 @@ export function getEpubFilePathFromState(state: unknown): string | null {
     const nestedState = stateObj.state as { filePath?: unknown };
     if (typeof nestedState.filePath === "string") {
       const trimmed = nestedState.filePath.trim();
-      console.log("[Nexus EPUB] Found filePath in nested state:", trimmed);
       return trimmed ? trimmed : null;
     }
   }
-  console.log("[Nexus EPUB] No filePath found in state");
   return null;
 }
 

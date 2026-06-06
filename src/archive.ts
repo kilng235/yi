@@ -1,96 +1,77 @@
-import { App, TFile } from "obsidian";
+import { App } from "obsidian";
 import { KanbanCard } from "./types";
 
-/**
- * Get the monthly archive file path for a given date.
- */
 function getArchivePath(dateStr: string): string {
   const [year, month] = dateStr.split("-");
   return `nexus/archive/${year}-${month}.md`;
 }
 
-/**
- * Escape special regex characters in a string.
- */
-function escapeRegex(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-/**
- * Read the content of a vault file by path, or return empty string if missing.
- */
 async function readFile(app: App, path: string): Promise<string> {
   const file = app.vault.getFileByPath(path);
   if (!file) return "";
   return await app.vault.read(file);
 }
 
-/**
- * Ensure the archive directory exists (nexus/archive/) by creating it through
- * the vault API so Obsidian properly indexes it.
- */
 async function ensureArchiveDir(app: App): Promise<void> {
-  try {
-    const dir = app.vault.getAbstractFileByPath("nexus/archive");
-    if (!dir) {
+  const dir = app.vault.getAbstractFileByPath("nexus/archive");
+  if (!dir) {
+    try {
       await app.vault.createFolder("nexus/archive");
+    } catch (e) {
+      console.error("Nexus: failed to create archive directory", e);
     }
-  } catch (e) {
-    console.error("Nexus: failed to create archive directory", e);
   }
 }
 
 /**
- * Append a completed card to the monthly archive file.
- * Uses the vault API (create/modify) so the file is indexed by Obsidian.
- * Uses a card ID marker (HTML comment) for dedup.
- *
- * Archive format:
- * ```markdown
- * # 2026-06 完成事项
- *
- * ## 2026-06-05
- *
- * - [x] 任务标题 — 来自「列名」 <!-- card-id-here -->
- * ```
- *
- * @returns true if the card was newly archived, false if already present.
+ * Build a multi-line archive block preserving full card information.
  */
+function buildArchiveEntry(card: KanbanCard, columnName: string): string {
+  const lines: string[] = [];
+  lines.push(`### ${card.title}`);
+  lines.push(`type: ${card.type}`);
+  if (card.createdAt) lines.push(`date: ${card.createdAt}`);
+  lines.push(`completed: ${card.completedAt}`);
+  if (card.tags.length) lines.push(`tags: ${card.tags.join(", ")}`);
+  lines.push(`source: ${columnName}`);
+  lines.push(`<!-- ${card.id} -->`);
+  lines.push("");
+  for (const task of card.tasks) {
+    lines.push(`- [${task.checked ? "x" : " "}] ${task.text}`);
+  }
+  if (card.body) {
+    if (card.tasks.length) lines.push("");
+    lines.push(card.body);
+  }
+  lines.push("");
+  return lines.join("\n");
+}
+
 export async function appendToArchive(
   app: App,
   card: KanbanCard,
   columnName: string
 ): Promise<boolean> {
   if (!card.completedAt || !card.id) return false;
-
   await ensureArchiveDir(app);
-
   const archivePath = getArchivePath(card.completedAt);
-  const dateLabel = card.completedAt;
   const cardMarker = `<!-- ${card.id} -->`;
-
-  // Read existing content via vault API
   let content = await readFile(app, archivePath);
-
-  // Dedup: skip if this card ID is already in the archive
   if (content.includes(cardMarker)) return false;
 
-  // Build entry line
-  const entryLine = `- [x] ${card.title} — 来自「${columnName}」 ${cardMarker}`;
-  const dateSection = `## ${dateLabel}`;
+  const entry = buildArchiveEntry(card, columnName);
+  const dateSection = `## ${card.completedAt}`;
+  const dateIndex = content.indexOf(dateSection);
 
-  if (content.includes(dateSection)) {
-    // Append entry right after the date heading
-    content = content.replace(
-      new RegExp(`(${escapeRegex(dateSection)}\\n)`),
-      `$1${entryLine}\n`
-    );
+  if (dateIndex !== -1) {
+    const afterHeading = dateIndex + dateSection.length;
+    const nlIndex = content.indexOf("\n", afterHeading);
+    const insertPos = nlIndex !== -1 ? nlIndex + 1 : content.length;
+    content = content.slice(0, insertPos) + entry + content.slice(insertPos);
   } else {
-    // New date section at the end
-    content += `\n${dateSection}\n\n${entryLine}\n`;
+    content += `\n${dateSection}\n\n${entry}`;
   }
 
-  // Persist via vault API (create if new, modify if existing)
   try {
     const existingFile = app.vault.getFileByPath(archivePath);
     if (existingFile) {
@@ -104,6 +85,5 @@ export async function appendToArchive(
     console.error("Nexus: failed to write archive entry", e);
     return false;
   }
-
   return true;
 }

@@ -1,5 +1,16 @@
 // Shared utilities for Nexus plugin
 
+/** Current date in local time as "YYYY-MM-DD" (avoids UTC timezone shift). */
+export function todayStr(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Current month in local time as "YYYY-MM". */
+export function monthStr(): string {
+  return todayStr().substring(0, 7);
+}
+
 /** Format milliseconds into a human-readable duration string */
 export function formatDuration(ms: number): string {
   const seconds = Math.floor(ms / 1000);

@@ -2,6 +2,7 @@ import { KanbanData, KanbanCard } from "../types";
 import { KanbanSync } from "../kanban-sync";
 import { FilePickerModal } from "./file-picker-modal";
 import { App } from "obsidian";
+import { todayStr } from "../utils";
 
 export function renderKanban(
   el: HTMLElement,
@@ -49,7 +50,7 @@ export function renderKanban(
           tags: [],
           dueDate: "",
           checked: false,
-          createdAt: new Date().toISOString().slice(0, 10),
+          createdAt: todayStr(),
           completedAt: "",
           tasks: [],
         };
@@ -69,10 +70,8 @@ export function renderKanban(
       e.preventDefault();
       colEl.removeClass("nexus-kanban-column--drag-over");
       const cardId = e.dataTransfer?.getData("text/plain");
-      console.log("[Nexus] Column drop:", cardId, "to", col.name);
       if (cardId) {
         await sync.moveCard(cardId, col.name, col.cards.length);
-        console.log("[Nexus] Column move done");
       }
     });
   }
@@ -135,10 +134,8 @@ function renderCard(
     e.preventDefault();
     e.stopPropagation();
     const cardId = e.dataTransfer?.getData("text/plain");
-    console.log("[Nexus] Card drop:", cardId, "to", columnName);
     if (cardId) {
       await sync.moveCard(cardId, columnName, 0);
-      console.log("[Nexus] Card moved successfully");
     }
   });
 

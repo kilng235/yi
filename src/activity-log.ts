@@ -1,4 +1,5 @@
 import { App } from "obsidian";
+import { todayStr } from "./utils";
 
 const ACTIVITY_LOG_PATH = "nexus/activity-log.json";
 
@@ -37,6 +38,5 @@ export async function saveActivityLog(app: App, log: ActivityLog): Promise<void>
 }
 
 export function todayKey(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return todayStr();
 }

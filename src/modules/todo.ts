@@ -3,9 +3,12 @@ import { KanbanSync } from "../kanban-sync";
 import { InputModal } from "./input-modal";
 import { App } from "obsidian";
 import { ActivityLog } from "../activity-log";
+import { todayStr, monthStr } from "../utils";
 
 /**
- * Count this month's completed tasks from archive file.
+ * Count this month's completed cards from archive file.
+ * Supports both the new multi-line format (^### headings) and
+ * the legacy single-line format (^- [x] entries) for backward compatibility.
  */
 async function countArchivedThisMonth(app: App, monthKey: string): Promise<number> {
   try {
@@ -13,9 +16,9 @@ async function countArchivedThisMonth(app: App, monthKey: string): Promise<numbe
     const file = app.vault.getFileByPath(archivePath);
     if (!file) return 0;
     const content = await app.vault.read(file);
-    // Count each "- [x]" line as one completed task
-    const matches = content.match(/^- \[x\]/gm);
-    return matches ? matches.length : 0;
+    const cards = content.match(/^### .+/gm);
+    const legacy = content.match(/^- \[x\] .+ <!-- .+ -->/gm);
+    return (cards ? cards.length : 0) + (legacy ? legacy.length : 0);
   } catch {
     return 0;
   }
@@ -23,11 +26,14 @@ async function countArchivedThisMonth(app: App, monthKey: string): Promise<numbe
 
 /**
  * Count today's completed tasks from kanban data.
+ * Uses the last column (completed column by position) rather than a hardcoded name.
+ * Only counts cards whose completedAt matches today's local date.
  */
 function countTodayCompleted(data: KanbanData): number {
-  const col = data.columns.find((c) => c.name === "已完成");
-  if (!col) return 0;
-  return col.cards.filter((c) => c.type === "task" && c.checked).length;
+  if (data.columns.length === 0) return 0;
+  const lastCol = data.columns[data.columns.length - 1];
+  const today = todayStr();
+  return lastCol.cards.filter((c) => c.type === "task" && c.checked && c.completedAt === today).length;
 }
 
 export async function renderTodo(
@@ -45,19 +51,30 @@ export async function renderTodo(
   const headerMain = header.createDiv({ cls: "nexus-todo-header-main" });
   headerMain.createEl("h3", { text: "待办" });
 
-  // Collect task cards from 待做 and 已完成 columns only
-  const relevantColumns = ["待做", "已完成"];
+  // Collect task cards from all columns (position-based, not name-based)
   const taskCards = data.columns
-    .filter((col) => relevantColumns.includes(col.name))
     .flatMap((col) =>
       col.cards
         .filter((c) => c.type === "task")
         .map((c) => ({ ...c, columnName: col.name }))
-    );
+    )
+    .sort((a, b) => {
+      // Unchecked first, checked last
+      if (a.checked !== b.checked) return a.checked ? 1 : -1;
+      // Among unchecked: due date ascending (earliest/overdue first)
+      if (a.dueDate && b.dueDate && a.dueDate !== b.dueDate) {
+        return a.dueDate < b.dueDate ? -1 : 1;
+      }
+      if (a.dueDate && !b.dueDate) return -1;
+      if (!a.dueDate && b.dueDate) return 1;
+      // Fallback: newer tasks first
+      return (b.createdAt || "").localeCompare(a.createdAt || "");
+    });
 
-  const pendingCount = taskCards.filter((card) => !card.checked).length;
-  const now = new Date();
-  const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  // Pending = tasks in the first column that are not checked
+  const firstColName = data.columns[0]?.name;
+  const pendingCount = taskCards.filter((card) => !card.checked && card.columnName === firstColName).length;
+  const monthKey = monthStr();
   const todayCount = countTodayCompleted(data);
   const archivedCount = await countArchivedThisMonth(app, monthKey);
   const completedCount = todayCount + archivedCount;
@@ -78,6 +95,7 @@ export async function renderTodo(
     text: "+ 添加任务",
   });
   addBtn.addEventListener("click", () => {
+    if (!data.columns.length) return;
     new InputModal(app, "新建任务", "输入任务内容", async (title) => {
       const newCard: KanbanCard = {
         id: `card-${Date.now().toString(36)}`,
@@ -87,12 +105,12 @@ export async function renderTodo(
         tags: [],
         dueDate: "",
         checked: false,
-        createdAt: new Date().toISOString().slice(0, 10),
+        createdAt: todayStr(),
         completedAt: "",
         tasks: [],
       };
-      // Add to first column (待做)
-      await sync.addCard(data.columns[0]?.name || "待做", newCard);
+      // Add to first column (position-based)
+      await sync.addCard(data.columns[0].name, newCard);
     }).open();
   });
 

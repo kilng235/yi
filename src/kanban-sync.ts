@@ -2,6 +2,7 @@ import { App, TFile } from "obsidian";
 import { KanbanData, KanbanColumn, KanbanCard, NexusSettings } from "./types";
 import { deriveCardCheckedState, getTodoCheckDelta } from "./todo-completion";
 import { appendToArchive } from "./archive";
+import { todayStr } from "./utils";
 
 const HASH_FN = (s: string): number => {
   let h = 0;
@@ -88,7 +89,7 @@ export class KanbanSync {
         const previousChecked = card.checked;
         const previousCompletedAt = card.completedAt;
         card.checked = checked;
-        card.completedAt = checked ? new Date().toISOString().slice(0, 10) : "";
+        card.completedAt = checked ? todayStr() : "";
         for (const task of card.tasks) {
           task.checked = checked;
         }
@@ -134,7 +135,7 @@ export class KanbanSync {
     const isLastColumn = cols.indexOf(target) === cols.length - 1;
     if (isLastColumn) {
       moved.checked = true;
-      moved.completedAt = new Date().toISOString().slice(0, 10);
+      moved.completedAt = todayStr();
       for (const task of moved.tasks) task.checked = true;
     }
     const adjustedIndex = (sourceColumnName === toColumn && sourceIndex < toIndex)
@@ -186,8 +187,6 @@ export class KanbanSync {
 columns:
   - name: 待做
     color: "#f59e0b"
-  - name: 进行中
-    color: "#6366f1"
   - name: 已完成
     color: "#10b981"
 ---
@@ -196,13 +195,11 @@ columns:
 
 ### 欢迎使用 Nexus
 type: task
-date: ${new Date().toISOString().slice(0, 10)}
+date: ${todayStr()}
 
 - [ ] 试试添加一张新卡片
 - [ ] 拖拽卡片到其他列
 - [ ] 看看热力图
-
-## 进行中
 
 ## 已完成
 `;
@@ -232,12 +229,8 @@ date: ${new Date().toISOString().slice(0, 10)}
   }
 
   private async archiveCompletedCards() {
-    if (!this.data) {
-      console.log("Nexus: archiveCompletedCards - no data");
-      return;
-    }
-    const today = new Date().toISOString().slice(0, 10);
-    console.log("Nexus: archiveCompletedCards - today:", today);
+    if (!this.data) return;
+    const today = todayStr();
     let archived = false;
 
     for (const col of this.data.columns) {
@@ -245,20 +238,14 @@ date: ${new Date().toISOString().slice(0, 10)}
 
       // Collect cards that are checked and completed on a previous day
       for (const card of col.cards) {
-        if (card.checked && card.completedAt) {
-          console.log(`Nexus: card "${card.title}" checked=${card.checked} completedAt=${card.completedAt} col=${col.name}`);
-          if (card.completedAt !== today) {
-            toArchive.push({ card, colName: col.name });
-            console.log(`Nexus: will archive card "${card.title}"`);
-          }
+        if (card.checked && card.completedAt && card.completedAt !== today) {
+          toArchive.push({ card, colName: col.name });
         }
       }
 
       // Archive each card
       for (const { card, colName } of toArchive) {
-        console.log(`Nexus: archiving card "${card.title}" to ${card.completedAt}`);
         const ok = await appendToArchive(this.app, card, colName);
-        console.log(`Nexus: archive result for "${card.title}":`, ok);
         if (ok) {
           // Remove from current data only if archive succeeded
           col.cards = col.cards.filter((c) => c.id !== card.id);
@@ -267,10 +254,25 @@ date: ${new Date().toISOString().slice(0, 10)}
       }
     }
 
-    console.log("Nexus: archiveCompletedCards - archived:", archived);
     if (archived) {
-      await this.writeToDisk();
+      await this.silentWrite(this.toMarkdown(this.data!));
     }
+  }
+
+  private async silentWrite(content: string) {
+    if (!this.file) return;
+    // Temporarily unregister file watcher to prevent self-triggered reload
+    if (this.eventRef) {
+      this.app.vault.offref(this.eventRef);
+      this.eventRef = null;
+    }
+    this.lastWrittenHash = HASH_FN(content);
+    try {
+      await this.app.vault.modify(this.file, content);
+    } catch (e) {
+      console.error("Nexus: failed to write kanban data", e);
+    }
+    this.registerFileWatcher();
   }
 
   private async writeToDisk() {
@@ -287,18 +289,21 @@ date: ${new Date().toISOString().slice(0, 10)}
   }
 
   /**
-   * Schedule a check at local midnight to archive completed cards
-   * from the previous day, even if Obsidian stays open.
+   * Schedule a check shortly after local midnight to archive completed
+   * cards from the previous day, even if Obsidian stays open.
+   * A 5-second buffer avoids clock-skew edge cases at the exact boundary.
    */
   private scheduleMidnightCheck() {
     if (this.midnightTimer) clearTimeout(this.midnightTimer);
     const now = new Date();
     const midnight = new Date(now);
     midnight.setHours(24, 0, 0, 0); // next local midnight
-    const msUntilMidnight = midnight.getTime() - now.getTime();
-    this.midnightTimer = setTimeout(() => {
+    const bufferMs = 5000;
+    const msUntilMidnight = midnight.getTime() - now.getTime() + bufferMs;
+    this.midnightTimer = setTimeout(async () => {
       this.midnightTimer = null;
-      this.load();
+      await this.load();
+      this.scheduleMidnightCheck(); // reschedule for the next midnight
     }, msUntilMidnight);
   }
 

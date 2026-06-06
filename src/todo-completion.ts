@@ -1,3 +1,5 @@
+import { todayStr } from "./utils";
+
 export interface TodoTask {
   text: string;
   checked: boolean;
@@ -13,7 +15,7 @@ export function getTodoCheckDelta(
   previousChecked: boolean,
   nextChecked: boolean,
   completedAt: string,
-  today: string = new Date().toISOString().slice(0, 10)
+  today: string = todayStr()
 ): number {
   if (!previousChecked && nextChecked) return 1;
   if (previousChecked && !nextChecked && completedAt === today) return -1;
