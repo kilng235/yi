@@ -6,6 +6,11 @@ export interface QuickLink {
   icon: string;
 }
 
+export interface CountdownItem {
+  name: string;
+  targetDate: string;
+}
+
 export interface NexusSettings {
   kanbanFile: string;
   bannerImage: string;
@@ -21,6 +26,7 @@ export interface NexusSettings {
   stylePreset: "aurora";
   quickLinks: QuickLink[];
   deepseekApiKey: string;
+  countdowns: CountdownItem[];
 }
 
 export const DEFAULT_SETTINGS: NexusSettings = {
@@ -51,6 +57,7 @@ export const DEFAULT_SETTINGS: NexusSettings = {
     { name: "GitHub", url: "https://github.com", icon: "🔗" },
   ],
   deepseekApiKey: "",
+  countdowns: [],
 };
 
 // ===== Grid =====

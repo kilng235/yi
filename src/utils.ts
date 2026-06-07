@@ -34,6 +34,81 @@ export function formatReadingTime(ms: number): string {
   return "刚开始";
 }
 
+export type CountdownStatusType = "empty" | "invalid" | "future" | "today" | "past";
+
+export interface CountdownStatus {
+  status: CountdownStatusType;
+  title: string;
+  message: string;
+  days?: number;
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function localDateOnly(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function parseLocalDate(dateStr: string): Date | null {
+  const match = /^(\d{4})[-./](\d{1,2})[-./](\d{1,2})$/.exec(dateStr);
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const parsed = new Date(year, month - 1, day);
+
+  if (
+    parsed.getFullYear() !== year ||
+    parsed.getMonth() !== month - 1 ||
+    parsed.getDate() !== day
+  ) {
+    return null;
+  }
+
+  return parsed;
+}
+
+/** Normalize a date string (accepts - . / separators) to YYYY-MM-DD */
+export function normalizeDateStr(dateStr: string): string {
+  const match = /^(\d{4})[-./](\d{1,2})[-./](\d{1,2})$/.exec(dateStr.trim());
+  if (!match) return dateStr;
+  return `${match[1]}-${match[2].padStart(2, "0")}-${match[3].padStart(2, "0")}`;
+}
+
+/** Calculate countdown display state from a custom title and local YYYY-MM-DD target date. */
+export function getCountdownStatus(name: string, targetDate: string, now: Date = new Date()): CountdownStatus {
+  const title = name.trim() || "倒计时";
+  const dateText = targetDate.trim();
+
+  if (!name.trim() && !dateText) {
+    return { status: "empty", title, message: "未配置倒计时" };
+  }
+
+  if (!dateText) {
+    return { status: "empty", title, message: "未配置目标日期" };
+  }
+
+  if (!/^\d{4}[-./]\d{1,2}[-./]\d{1,2}$/.test(dateText)) {
+    return { status: "invalid", title, message: "日期格式如 2026-06-17 或 2026.6.17" };
+  }
+
+  const target = parseLocalDate(dateText);
+  if (!target) {
+    return { status: "invalid", title, message: "目标日期不存在" };
+  }
+
+  const diffDays = Math.round((target.getTime() - localDateOnly(now).getTime()) / DAY_MS);
+  if (diffDays > 0) {
+    return { status: "future", title, message: `剩余 ${diffDays} 天`, days: diffDays };
+  }
+  if (diffDays === 0) {
+    return { status: "today", title, message: "就是今天", days: 0 };
+  }
+
+  return { status: "past", title, message: `已过 ${Math.abs(diffDays)} 天`, days: Math.abs(diffDays) };
+}
+
 /** DeepSeek balance API response */
 export interface DeepSeekBalance {
   is_available: boolean;

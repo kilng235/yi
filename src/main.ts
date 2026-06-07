@@ -8,6 +8,7 @@ export default class NexusPlugin extends Plugin {
 
   async onload() {
     await this.loadSettings();
+    await this.migrateCountdownSettings();
     await this.backfillActivityFromVault();
 
     this.registerView(NEXUS_VIEW_TYPE, (leaf) => new NexusView(leaf, this));
@@ -27,6 +28,21 @@ export default class NexusPlugin extends Plugin {
   }
 
   onunload() {}
+
+  private async migrateCountdownSettings() {
+    const raw = this.settings as any;
+    if (raw.countdownName || raw.countdownTargetDate) {
+      if (raw.countdownName || raw.countdownTargetDate) {
+        this.settings.countdowns.push({
+          name: raw.countdownName || "",
+          targetDate: raw.countdownTargetDate || "",
+        });
+      }
+      delete raw.countdownName;
+      delete raw.countdownTargetDate;
+      await this.saveSettings();
+    }
+  }
 
   async loadSettings() {
     const localData = await this.loadData();

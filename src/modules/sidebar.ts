@@ -1,5 +1,6 @@
 import { App, TFile } from "obsidian";
 import NexusPlugin from "../main";
+import { getCountdownStatus, normalizeDateStr } from "../utils";
 import { InputModal } from "./input-modal";
 
 export function renderSidebar(
@@ -48,6 +49,10 @@ export function renderSidebar(
   // === DeepSeek Balance ===
   const balanceSection = el.createDiv({ cls: "nexus-sidebar-section" });
   renderSidebarBalance(balanceSection, plugin);
+
+  // === Countdown ===
+  const countdownSection = el.createDiv({ cls: "nexus-sidebar-section" });
+  renderSidebarCountdown(countdownSection, app, plugin, cleanupFns);
 }
 
 function renderQuickLinks(el: HTMLElement, plugin: NexusPlugin) {
@@ -190,4 +195,80 @@ function renderSidebarBalance(el: HTMLElement, plugin: NexusPlugin) {
       body.empty();
       body.createDiv({ cls: "nexus-sidebar-balance-empty", text: "查询失败" });
     });
+}
+
+function renderSidebarCountdown(
+  el: HTMLElement,
+  app: App,
+  plugin: NexusPlugin,
+  cleanupFns: Array<() => void>
+) {
+  const title = el.createEl("h3", { cls: "nexus-sidebar-title" });
+  title.createSpan({ text: "倒计时" });
+  title.addClass("nexus-sidebar-title--countdown");
+
+  const body = el.createDiv({ cls: "nexus-sidebar-countdown" });
+
+  const render = () => {
+    body.empty();
+    const items = plugin.settings.countdowns || [];
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      const countdown = getCountdownStatus(item.name, item.targetDate);
+
+      const card = body.createDiv({ cls: "nexus-sidebar-countdown-card" });
+
+      if (countdown.status === "invalid") {
+        const left = card.createDiv({ cls: "nexus-sidebar-countdown-left" });
+        left.createDiv({ cls: "nexus-sidebar-countdown-name", text: countdown.title });
+        left.createDiv({ cls: "nexus-sidebar-countdown-error", text: countdown.message });
+      } else {
+        const left = card.createDiv({ cls: "nexus-sidebar-countdown-left" });
+        left.createDiv({ cls: "nexus-sidebar-countdown-name", text: countdown.title });
+        left.createDiv({ cls: "nexus-sidebar-countdown-label", text: item.targetDate });
+
+        const daysCls = `nexus-sidebar-countdown-days${
+          countdown.status === "today" ? " nexus-sidebar-countdown-days--today" :
+          countdown.status === "past" ? " nexus-sidebar-countdown-days--past" : ""
+        }`;
+        card.createDiv({ cls: daysCls, text: countdown.days != null ? `${countdown.days}` : "" });
+      }
+
+      const delBtn = card.createDiv({ cls: "nexus-sidebar-countdown-del", text: "×" });
+      delBtn.addEventListener("click", async () => {
+        plugin.settings.countdowns.splice(i, 1);
+        await plugin.saveSettings();
+        render();
+      });
+    }
+
+    const addBtn = body.createDiv({ cls: "nexus-sidebar-countdown-add", text: "+ 添加倒计时" });
+    addBtn.addEventListener("click", () => {
+      new InputModal(app, "添加倒计时", "名称（如：考试）", async (name) => {
+        new InputModal(app, "添加倒计时", "目标日期（如 2026-06-17 或 2026.6.17）", async (date) => {
+          plugin.settings.countdowns.push({ name, targetDate: normalizeDateStr(date) });
+          await plugin.saveSettings();
+          render();
+        }).open();
+      }).open();
+    });
+  };
+
+  render();
+
+  let timeout: number | null = null;
+  const scheduleNextMidnight = () => {
+    const now = new Date();
+    const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    timeout = window.setTimeout(() => {
+      render();
+      scheduleNextMidnight();
+    }, nextMidnight.getTime() - now.getTime() + 1000);
+  };
+
+  scheduleNextMidnight();
+  cleanupFns.push(() => {
+    if (timeout !== null) window.clearTimeout(timeout);
+  });
 }
