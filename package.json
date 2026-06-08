@@ -1,7 +1,7 @@
 {
   "name": "hubstack",
   "version": "0.1.0",
-  "description": "Hubstack is an Obsidian homepage dashboard for tasks, activity, reading, links, countdowns, and EPUB books",
+  "description": "Hubstack 是一个 Obsidian 首页仪表盘插件，整合待办、活跃热力图、书架、链接、倒计时和 EPUB 阅读",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
