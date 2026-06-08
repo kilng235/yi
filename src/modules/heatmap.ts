@@ -123,8 +123,9 @@ function buildDailyScores(settings: HubstackSettings, activityLog?: ActivityLog)
   const scores: Record<string, number> = {};
   const w = settings.heatmapWeights;
 
-  for (const [dateKey, sessions] of Object.entries(settings.readingSessions)) {
-    const totalMs = sessions.reduce((sum, s) => sum + s.durationMs, 0);
+  for (const [dateKey, value] of Object.entries(settings.readingSessions || {})) {
+    const sessions = Array.isArray(value) ? value : value ? [value] : [];
+    const totalMs = sessions.reduce((sum, s) => sum + (s.durationMs || 0), 0);
     const points = Math.floor(totalMs / (10 * 60 * 1000)) * w.reading10min;
     scores[dateKey] = (scores[dateKey] || 0) + points;
   }
