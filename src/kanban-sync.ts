@@ -19,8 +19,9 @@ export class KanbanSync {
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private debounceMs = 300;
   private midnight = new MidnightScheduler();
-  private callbacks: Array<(data: KanbanData) => void> = [];
+  private callbacks: Array<(data: KanbanData) => void | Promise<void>> = [];
   private eventRef: any = null;
+  private loading: boolean = false;
   private onActivity: ((type: string) => void) | null = null;
 
   setActivityCallback(cb: (type: string) => void) {
@@ -215,16 +216,25 @@ date: ${todayStr()}
   }
 
   private async load() {
-    if (!this.file) return;
-    const content = await this.app.vault.cachedRead(this.file);
-    const hash = hashContent(content);
-    if (hash === this.lastWrittenHash) return;
-    this.data = parseKanbanMarkdown(content);
-    const archived = await archiveCompletedCards(this.app, this.data);
-    if (archived) {
-      await this.silentWrite(toKanbanMarkdown(this.data));
+    if (!this.file || this.loading) return;
+    this.loading = true;
+    try {
+      const content = await this.app.vault.cachedRead(this.file);
+      const hash = hashContent(content);
+      if (hash !== this.lastWrittenHash) {
+        this.data = parseKanbanMarkdown(content);
+      }
+      // Always archive completed cards from previous days
+      if (this.data) {
+        const archived = await archiveCompletedCards(this.app, this.data);
+        if (archived) {
+          await this.silentWrite(toKanbanMarkdown(this.data));
+        }
+      }
+      await this.notifyCallbacks();
+    } finally {
+      this.loading = false;
     }
-    this.notifyCallbacks();
     this.midnight.schedule(() => this.load());
   }
 
@@ -252,12 +262,18 @@ date: ${todayStr()}
     } catch (e) {
       console.error("Hubstack: failed to write kanban data", e);
     }
-    this.notifyCallbacks();
+    await this.notifyCallbacks();
     this.midnight.schedule(() => this.load());
   }
 
-  private notifyCallbacks() {
+  private async notifyCallbacks() {
     if (!this.data) return;
-    for (const cb of this.callbacks) cb(this.data);
+    for (const cb of this.callbacks) {
+      try {
+        await cb(this.data);
+      } catch (e) {
+        console.error("Hubstack: callback error", e);
+      }
+    }
   }
 }

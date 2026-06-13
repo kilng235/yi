@@ -33,7 +33,7 @@ function countTodayCompleted(data: KanbanData): number {
   if (data.columns.length === 0) return 0;
   const lastCol = data.columns[data.columns.length - 1];
   const today = todayStr();
-  return lastCol.cards.filter((c) => c.type === "task" && c.checked && c.completedAt === today).length;
+  return lastCol.cards.filter((c) => c.checked && c.completedAt === today).length;
 }
 
 export async function renderTodo(

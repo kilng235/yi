@@ -44,9 +44,9 @@ export class HubstackView extends ItemView {
       if (type === "noteCreate") this.activityLog[key].noteCreate++;
       saveActivityLog(this.app, this.activityLog);
     });
-    this.kanbanSync.onDataUpdate((data) => {
+    this.kanbanSync.onDataUpdate(async (data) => {
       this.kanbanData = data;
-      this.render();
+      await this.render();
     });
     await this.kanbanSync.init();
     this.registerVaultListeners();
@@ -58,11 +58,11 @@ export class HubstackView extends ItemView {
   }
 
   registerVaultListeners() {
-    this.registerEvent(this.app.vault.on("create", (file) => {
-      if (file instanceof TFile && file.extension === "epub") this.render();
+    this.registerEvent(this.app.vault.on("create", async (file) => {
+      if (file instanceof TFile && file.extension === "epub") await this.render();
     }));
-    this.registerEvent(this.app.vault.on("delete", (file) => {
-      if (file instanceof TFile && file.extension === "epub") this.render();
+    this.registerEvent(this.app.vault.on("delete", async (file) => {
+      if (file instanceof TFile && file.extension === "epub") await this.render();
     }));
     this.registerEvent(this.app.vault.on("create", (file) => {
       if (file instanceof TFile && file.extension === "md") this.recordActivity("noteCreate");
@@ -96,7 +96,7 @@ export class HubstackView extends ItemView {
     this.cleanupFns = [];
   }
 
-  render() {
+  async render() {
     this.runCleanup();
     const container = this.contentEl;
     container.empty();
@@ -122,7 +122,7 @@ export class HubstackView extends ItemView {
     todoHeader.createEl("span", { text: "待办事项", cls: "nexus-section-title" });
     const todoBody = todoSection.createDiv({ cls: "nexus-section-body" });
     if (this.kanbanData) {
-      renderTodo(todoBody, this.kanbanData, this.kanbanSync, this.app, this.activityLog, this.cleanupFns);
+      await renderTodo(todoBody, this.kanbanData, this.kanbanSync, this.app, this.activityLog, this.cleanupFns);
     }
 
     const heatmapSection = main.createDiv({ cls: "nexus-section" });
