@@ -7,19 +7,23 @@ function getArchivePath(dateStr: string): string {
 }
 
 async function readFile(app: App, path: string): Promise<string> {
-  const file = app.vault.getFileByPath(path);
-  if (!file) return "";
-  return await app.vault.read(file);
+  try {
+    const exists = await app.vault.adapter.exists(path);
+    if (!exists) return "";
+    return await app.vault.adapter.read(path);
+  } catch {
+    return "";
+  }
 }
 
 async function ensureArchiveDir(app: App): Promise<void> {
-  const dir = app.vault.getAbstractFileByPath("hubstack/archive");
-  if (!dir) {
-    try {
+  try {
+    const exists = await app.vault.adapter.exists("hubstack/archive");
+    if (!exists) {
       await app.vault.createFolder("hubstack/archive");
-    } catch (e) {
-      console.error("Hubstack: failed to create archive directory", e);
     }
+  } catch (e) {
+    console.error("Hubstack: failed to create archive directory", e);
   }
 }
 
@@ -73,13 +77,13 @@ export async function appendToArchive(
   }
 
   try {
-    const existingFile = app.vault.getFileByPath(archivePath);
-    if (existingFile) {
-      await app.vault.modify(existingFile, content);
+    const exists = await app.vault.adapter.exists(archivePath);
+    if (exists) {
+      await app.vault.adapter.write(archivePath, content);
     } else {
       const monthYear = card.completedAt.substring(0, 7);
       const header = `# ${monthYear} 完成事项\n`;
-      await app.vault.create(archivePath, header + content);
+      await app.vault.adapter.write(archivePath, header + content);
     }
   } catch (e) {
     console.error("Hubstack: failed to write archive entry", e);
