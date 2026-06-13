@@ -4,21 +4,42 @@ import { InputModal } from "./input-modal";
 import { App } from "obsidian";
 import { ActivityLog } from "../activity-log";
 import { todayStr, monthStr } from "../utils";
+import { resolveArchiveReadPath } from "../archive";
 
 /**
- * Count this month's completed cards from archive file.
+ * Count entries in a single archive file by regex.
+ */
+function countEntriesInFile(content: string): number {
+  const cards = content.match(/^### .+/gm);
+  const legacy = content.match(/^- \[x\] .+ <!-- .+ -->/gm);
+  return (cards ? cards.length : 0) + (legacy ? legacy.length : 0);
+}
+
+/**
+ * Count this month's completed cards from archive file(s).
  * Supports both the new multi-line format (^### headings) and
  * the legacy single-line format (^- [x] entries) for backward compatibility.
+ * Checks hubstack/archive first, then legacy paths (nexus/archive, nexus-backup/archive),
+ * and sums counts from all found files to handle migrated data.
  */
 async function countArchivedThisMonth(app: App, monthKey: string): Promise<number> {
   try {
-    const archivePath = `hubstack/archive/${monthKey}.md`;
-    const file = app.vault.getFileByPath(archivePath);
-    if (!file) return 0;
-    const content = await app.vault.read(file);
-    const cards = content.match(/^### .+/gm);
-    const legacy = content.match(/^- \[x\] .+ <!-- .+ -->/gm);
-    return (cards ? cards.length : 0) + (legacy ? legacy.length : 0);
+    const fileName = `${monthKey}.md`;
+    const paths = [
+      `hubstack/archive/${fileName}`,
+      `nexus/archive/${fileName}`,
+      `nexus-backup/archive/${fileName}`,
+    ];
+    let total = 0;
+    for (const p of paths) {
+      try {
+        if (await app.vault.adapter.exists(p)) {
+          const content = await app.vault.adapter.read(p);
+          total += countEntriesInFile(content);
+        }
+      } catch { /* ignore */ }
+    }
+    return total;
   } catch {
     return 0;
   }

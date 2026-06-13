@@ -1,9 +1,32 @@
 import { App } from "obsidian";
 import { KanbanCard } from "./types";
 
+const ARCHIVE_DIR = "hubstack/archive";
+const LEGACY_ARCHIVE_DIRS = ["nexus/archive", "nexus-backup/archive"];
+
 function getArchivePath(dateStr: string): string {
   const [year, month] = dateStr.split("-");
-  return `hubstack/archive/${year}-${month}.md`;
+  return `${ARCHIVE_DIR}/${year}-${month}.md`;
+}
+
+/**
+ * Find the first existing archive file for a given date string (YYYY-MM-DD),
+ * checking hubstack first, then legacy directories.
+ * Returns the hubstack path as default if no legacy file exists.
+ */
+export async function resolveArchiveReadPath(app: App, dateStr: string): Promise<string> {
+  const [year, month] = dateStr.split("-");
+  const fileName = `${year}-${month}.md`;
+  const paths = [
+    `${ARCHIVE_DIR}/${fileName}`,
+    ...LEGACY_ARCHIVE_DIRS.map(dir => `${dir}/${fileName}`),
+  ];
+  for (const p of paths) {
+    try {
+      if (await app.vault.adapter.exists(p)) return p;
+    } catch { /* ignore */ }
+  }
+  return paths[0]; // fallback to hubstack path
 }
 
 async function readFile(app: App, path: string): Promise<string> {
@@ -60,7 +83,9 @@ export async function appendToArchive(
   await ensureArchiveDir(app);
   const archivePath = getArchivePath(card.completedAt);
   const cardMarker = `<!-- ${card.id} -->`;
-  let content = await readFile(app, archivePath);
+  // Read existing content from hubstack or legacy path, then always write to hubstack
+  const readPath = await resolveArchiveReadPath(app, card.completedAt);
+  let content = await readFile(app, readPath);
   if (content.includes(cardMarker)) return false;
 
   const entry = buildArchiveEntry(card, columnName);
