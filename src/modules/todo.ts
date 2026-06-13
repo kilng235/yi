@@ -7,39 +7,19 @@ import { todayStr, monthStr } from "../utils";
 import { resolveArchiveReadPath } from "../archive";
 
 /**
- * Count entries in a single archive file by regex.
- */
-function countEntriesInFile(content: string): number {
-  const cards = content.match(/^### .+/gm);
-  const legacy = content.match(/^- \[x\] .+ <!-- .+ -->/gm);
-  return (cards ? cards.length : 0) + (legacy ? legacy.length : 0);
-}
-
-/**
- * Count this month's completed cards from archive file(s).
+ * Count this month's completed cards from archive file.
  * Supports both the new multi-line format (^### headings) and
  * the legacy single-line format (^- [x] entries) for backward compatibility.
- * Checks hubstack/archive first, then legacy paths (nexus/archive, nexus-backup/archive),
- * and sums counts from all found files to handle migrated data.
  */
 async function countArchivedThisMonth(app: App, monthKey: string): Promise<number> {
   try {
-    const fileName = `${monthKey}.md`;
-    const paths = [
-      `hubstack/archive/${fileName}`,
-      `nexus/archive/${fileName}`,
-      `nexus-backup/archive/${fileName}`,
-    ];
-    let total = 0;
-    for (const p of paths) {
-      try {
-        if (await app.vault.adapter.exists(p)) {
-          const content = await app.vault.adapter.read(p);
-          total += countEntriesInFile(content);
-        }
-      } catch { /* ignore */ }
-    }
-    return total;
+    const archivePath = `hubstack/archive/${monthKey}.md`;
+    const exists = await app.vault.adapter.exists(archivePath);
+    if (!exists) return 0;
+    const content = await app.vault.adapter.read(archivePath);
+    const cards = content.match(/^### .+/gm);
+    const legacy = content.match(/^- \[x\] .+ <!-- .+ -->/gm);
+    return (cards ? cards.length : 0) + (legacy ? legacy.length : 0);
   } catch {
     return 0;
   }
