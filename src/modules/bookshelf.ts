@@ -16,6 +16,12 @@ interface CoverCacheEntry {
 
 type CoverIndex = Record<string, CoverCacheEntry>;
 
+interface BookEntry {
+  file: TFile;
+  coverUrl: string | null;
+  status: "unread" | "reading" | "done";
+}
+
 let _coverIndexCache: CoverIndex | null = null;
 
 async function loadCoverIndex(app: App): Promise<CoverIndex> {

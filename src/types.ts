@@ -18,7 +18,6 @@ export interface HubstackSettings {
   bannerPosition: { x: number; y: number };
   bannerHeight: number;
   bannerZoom: number;
-  gridLayout: GridCell[];
   heatmapWeights: HeatmapWeights;
   readingStats: Record<string, ReadingStat>;
   readingSessions: Record<string, ReadingSession[]>;
@@ -36,12 +35,6 @@ export const DEFAULT_SETTINGS: HubstackSettings = {
   bannerPosition: { x: 50, y: 50 },
   bannerHeight: 120,
   bannerZoom: 100,
-  gridLayout: [
-    { id: "sidebar", x: 0, y: 0, w: 1, h: 2 },
-    { id: "todo", x: 1, y: 0, w: 1, h: 1 },
-    { id: "heatmap", x: 2, y: 0, w: 1, h: 1 },
-    { id: "bookshelf", x: 1, y: 1, w: 2, h: 1 },
-  ],
   heatmapWeights: {
     cardComplete: 5,
     reading10min: 3,
@@ -59,16 +52,6 @@ export const DEFAULT_SETTINGS: HubstackSettings = {
   deepseekApiKey: "",
   countdowns: [],
 };
-
-// ===== Grid =====
-
-export interface GridCell {
-  id: string;
-  x: number;
-  y: number;
-  w: number; // 1 = half width, 2 = full width
-  h: number; // 1 = half height, 2 = full height
-}
 
 // ===== Heatmap =====
 

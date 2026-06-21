@@ -39,8 +39,9 @@
 .nexus-root {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
   font-family: var(--nx-font);
   background: var(--nx-bg);
   color: var(--nx-text);
@@ -216,10 +217,10 @@
   display: flex;
   gap: 16px;
   padding: 12px 16px 4px;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  align-items: stretch;
+  flex: 0 0 auto;
+  min-height: max-content;
+  overflow: visible;
+  align-items: flex-start;
 }
 
 .nexus-left-sidebar {
@@ -230,11 +231,9 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  min-height: 0;
+  min-height: max-content;
   padding-bottom: 4px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
+  overflow: visible;
 }
 
 .nexus-main {
@@ -244,7 +243,7 @@
   flex-direction: column;
   gap: 12px;
   padding-bottom: 4px;
-  overflow-y: auto;
+  overflow: visible;
 }
 
 /* ===== SECTIONS (right side) ===== */
@@ -283,214 +282,6 @@
 
 .nexus-section-body {
   padding: 10px 12px;
-}
-
-/* ===== KANBAN ===== */
-.nexus-kanban {
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-}
-
-.nexus-kanban-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-
-.nexus-kanban-header h3 {
-  margin: 0;
-  font-size: 1em;
-  font-weight: 600;
-}
-
-.nexus-kanban-add-section {
-  background: none;
-  border: 1px dashed var(--nx-border);
-  border-radius: 6px;
-  padding: 4px 10px;
-  color: var(--nx-text-muted);
-  cursor: pointer;
-  font-size: 0.8em;
-}
-
-.nexus-kanban-add-section:hover {
-  border-color: var(--nx-accent);
-  color: var(--nx-accent);
-}
-
-.nexus-kanban-board {
-  display: flex;
-  gap: 10px;
-  flex: 1;
-  overflow-x: auto;
-  min-height: 0;
-}
-
-.nexus-kanban-column {
-  min-width: 180px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  border-top: 3px solid var(--col-color, var(--nx-accent));
-  border-radius: 0 0 var(--nx-radius) var(--nx-radius);
-  background: var(--nx-bg-sidebar);
-  padding: 8px;
-}
-
-.nexus-kanban-column--drag-over {
-  background: color-mix(in srgb, var(--nx-accent) 8%, var(--nx-bg-sidebar));
-}
-
-.nexus-kanban-col-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.nexus-kanban-col-name {
-  font-weight: 600;
-  font-size: 0.85em;
-}
-
-.nexus-kanban-col-count {
-  font-size: 0.75em;
-  color: var(--nx-text-muted);
-  background: var(--nx-bg-card);
-  border-radius: 10px;
-  padding: 1px 7px;
-}
-
-.nexus-kanban-cards {
-  flex: 1;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.nexus-kanban-card {
-  background: var(--nx-bg-card);
-  border: 1px solid var(--nx-border);
-  border-left: 3px solid var(--col-color, var(--nx-accent));
-  border-radius: 8px;
-  padding: 8px 10px;
-  cursor: grab;
-  transition: box-shadow 0.15s;
-}
-
-.nexus-kanban-card:hover {
-  box-shadow: var(--nx-shadow);
-}
-
-.nexus-kanban-card--dragging {
-  opacity: 0.4;
-}
-
-.nexus-kanban-card--task {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-
-/* Completed column cards - dimmed with strikethrough */
-.nexus-kanban-card--done {
-  opacity: 0.45;
-}
-
-.nexus-kanban-card--done .nexus-kanban-card-title {
-  text-decoration: line-through;
-  color: var(--nx-text-muted);
-}
-
-.nexus-kanban-card-checkbox {
-  accent-color: var(--nx-accent);
-  cursor: pointer;
-  margin-top: 2px;
-  flex-shrink: 0;
-}
-
-.nexus-kanban-card-title--done {
-  text-decoration: line-through;
-  color: var(--nx-text-muted);
-}
-
-.nexus-kanban-card-title-row {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
-}
-
-.nexus-kanban-card-title {
-  font-size: 0.85em;
-  font-weight: 500;
-  flex: 1;
-  min-width: 0;
-  word-break: break-word;
-}
-
-.nexus-kanban-card-delete {
-  display: none;
-  background: none;
-  border: none;
-  color: var(--nx-text-muted);
-  cursor: pointer;
-  font-size: 1em;
-  line-height: 1;
-  padding: 0 2px;
-  border-radius: 4px;
-  flex-shrink: 0;
-  transition: color 0.15s, background 0.15s;
-}
-
-.nexus-kanban-card:hover .nexus-kanban-card-delete {
-  display: block;
-}
-
-.nexus-kanban-card-delete:hover {
-  color: var(--nx-danger, #ef4444);
-  background: color-mix(in srgb, var(--nx-danger, #ef4444) 14%, transparent);
-}
-
-.nexus-kanban-card-tags {
-  display: flex;
-  gap: 4px;
-  margin-top: 4px;
-  flex-wrap: wrap;
-}
-
-.nexus-kanban-card-tag {
-  font-size: 0.7em;
-  background: color-mix(in srgb, var(--nx-accent) 12%, transparent);
-  color: var(--nx-accent);
-  border-radius: 4px;
-  padding: 1px 6px;
-}
-
-.nexus-kanban-card-due {
-  font-size: 0.7em;
-  color: var(--nx-text-muted);
-  margin-top: 4px;
-}
-
-.nexus-kanban-add-card {
-  text-align: center;
-  padding: 6px;
-  color: var(--nx-text-muted);
-  font-size: 0.8em;
-  cursor: pointer;
-  border-radius: 6px;
-  margin-top: 4px;
-}
-
-.nexus-kanban-add-card:hover {
-  background: var(--nx-bg-card-hover);
-  color: var(--nx-accent);
 }
 
 /* ===== TODO ===== */
@@ -1016,7 +807,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  height: fit-content;
+  min-height: max-content;
 }
 
 .nexus-sidebar-section {
@@ -1030,7 +821,7 @@
 
 .nexus-sidebar-section > :last-child {
   border-radius: 0 0 calc(var(--nx-radius) - 1px) calc(var(--nx-radius) - 1px);
-  overflow: hidden;
+  overflow: visible;
 }
 
 .nexus-sidebar-title {
@@ -1429,16 +1220,4 @@
   background: var(--nx-accent);
   color: #fff;
   border-color: var(--nx-accent);
-}
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-  .nexus-grid {
-    grid-template-columns: 1fr !important;
-    grid-template-rows: repeat(4, 1fr) !important;
-  }
-
-  .nexus-kanban-board {
-    flex-direction: column;
-  }
 }
