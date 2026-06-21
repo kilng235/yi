@@ -1,0 +1,2 @@
+# Force LF for TypeScript sources to avoid CRLF noise
+*.ts text eol=lf
