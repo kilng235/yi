@@ -1,12 +1,15 @@
 import { ItemView, WorkspaceLeaf, TFile } from "obsidian";
 import HubstackPlugin from "./main";
-import { KanbanData } from "./types";
+import { KanbanData, Note } from "./types";
 import { KanbanSync } from "./kanban-sync";
+import { NotesSync } from "./notes-sync";
 import { renderBanner, cleanupBanner } from "./modules/banner";
 import { renderSidebar } from "./modules/sidebar";
 import { renderTodo } from "./modules/todo";
 import { renderHeatmap } from "./modules/heatmap";
 import { renderBookshelf } from "./modules/bookshelf";
+import { renderTabBar, TabId } from "./modules/tab-bar";
+import { renderNotesFlow } from "./modules/notes-flow";
 import { loadActivityLog, saveActivityLog, todayKey, ActivityLog } from "./activity-log";
 
 export const HUBSTACK_VIEW_TYPE = "hubstack-view";
@@ -14,7 +17,9 @@ export const HUBSTACK_VIEW_TYPE = "hubstack-view";
 export class HubstackView extends ItemView {
   plugin: HubstackPlugin;
   kanbanSync: KanbanSync;
+  notesSync: NotesSync;
   kanbanData: KanbanData | null = null;
+  notes: Note[] = [];
   cleanupFns: Array<() => void> = [];
   activityLog: ActivityLog = {};
 
@@ -22,6 +27,7 @@ export class HubstackView extends ItemView {
     super(leaf);
     this.plugin = plugin;
     this.kanbanSync = new KanbanSync(this.app, plugin.settings);
+    this.notesSync = new NotesSync(this.app);
   }
 
   getViewType(): string { return HUBSTACK_VIEW_TYPE; }
@@ -46,18 +52,27 @@ export class HubstackView extends ItemView {
     });
     this.kanbanSync.onDataUpdate(async (data) => {
       this.kanbanData = data;
-      await this.render();
+      if (this.plugin.settings.activeTab === "dashboard") await this.render();
+    });
+    this.notesSync.onChange(async (notes) => {
+      this.notes = notes;
+      if (this.plugin.settings.activeTab === "notes") await this.render();
     });
     await this.kanbanSync.init();
+    await this.notesSync.init();
     this.registerVaultListeners();
   }
 
   async onClose() {
     this.runCleanup();
     this.kanbanSync.destroy();
+    this.notesSync.destroy();
   }
 
   registerVaultListeners() {
+    const isHubstackInternal = (path: string) =>
+      path.startsWith("hubstack/") || path.includes(".obsidian/plugins/hubstack");
+
     this.registerEvent(this.app.vault.on("create", async (file) => {
       if (file instanceof TFile && file.extension === "epub") await this.render();
     }));
@@ -65,15 +80,15 @@ export class HubstackView extends ItemView {
       if (file instanceof TFile && file.extension === "epub") await this.render();
     }));
     this.registerEvent(this.app.vault.on("create", (file) => {
-      if (file instanceof TFile && file.extension === "md") this.recordActivity("noteCreate");
+      if (!(file instanceof TFile) || file.extension !== "md") return;
+      if (isHubstackInternal(file.path)) return;
+      this.recordActivity("noteCreate");
     }));
     let editDebounce: ReturnType<typeof setTimeout> | null = null;
     this.cleanupFns.push(() => { if (editDebounce) clearTimeout(editDebounce); });
     this.registerEvent(this.app.vault.on("modify", (file) => {
       if (!(file instanceof TFile) || file.extension !== "md") return;
-      const kanbanPath = this.plugin.settings.kanbanFile.trim();
-      const kanbanFile = kanbanPath.endsWith(".md") ? kanbanPath : `${kanbanPath}.md`;
-      if (file.path === kanbanFile || file.path.includes(".obsidian/plugins/hubstack")) return;
+      if (isHubstackInternal(file.path)) return;
       if (editDebounce) clearTimeout(editDebounce);
       editDebounce = setTimeout(() => this.recordActivity("noteEdit"), 5000);
     }));
@@ -96,6 +111,13 @@ export class HubstackView extends ItemView {
     this.cleanupFns = [];
   }
 
+  async setActiveTab(tab: TabId) {
+    if (this.plugin.settings.activeTab === tab) return;
+    this.plugin.settings.activeTab = tab;
+    await this.plugin.saveSettings();
+    await this.render();
+  }
+
   async render() {
     this.runCleanup();
     const container = this.contentEl;
@@ -109,7 +131,24 @@ export class HubstackView extends ItemView {
     }
     renderBanner(bannerEl, this.plugin.settings, this.app);
 
-    const body = container.createDiv({ cls: "nexus-body" });
+    const tabBar = container.createDiv({ cls: "nexus-tab-bar-wrap" });
+    renderTabBar(tabBar, this.plugin.settings.activeTab, (t) => this.setActiveTab(t));
+
+    const tabContent = container.createDiv({ cls: "nexus-tab-content" });
+
+    if (this.plugin.settings.activeTab === "notes") {
+      renderNotesFlow(
+        tabContent,
+        this.app,
+        this.notesSync,
+        this.notes,
+        this.cleanupFns,
+        (render) => render()
+      );
+      return;
+    }
+
+    const body = tabContent.createDiv({ cls: "nexus-body" });
 
     const sidebar = body.createDiv({ cls: "nexus-left-sidebar" });
     renderSidebar(sidebar, this.app, this.plugin, this.cleanupFns);

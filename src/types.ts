@@ -26,6 +26,7 @@ export interface HubstackSettings {
   quickLinks: QuickLink[];
   deepseekApiKey: string;
   countdowns: CountdownItem[];
+  activeTab: "dashboard" | "notes";
 }
 
 export const DEFAULT_SETTINGS: HubstackSettings = {
@@ -51,6 +52,7 @@ export const DEFAULT_SETTINGS: HubstackSettings = {
   ],
   deepseekApiKey: "",
   countdowns: [],
+  activeTab: "dashboard",
 };
 
 // ===== Heatmap =====
@@ -105,4 +107,18 @@ export interface KanbanCard {
   createdAt: string;
   completedAt: string;
   tasks: { text: string; checked: boolean }[];
+}
+
+// ===== Notes (瀑布流小记) =====
+
+export interface Note {
+  id: string;
+  title: string;
+  body: string;
+  tags: string[];
+  pinned: boolean;
+  archived: boolean;
+  createdAt: string;
+  updatedAt: string;
+  filePath: string;
 }
