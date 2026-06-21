@@ -243,10 +243,10 @@ function renderSidebarCountdown(
       });
     }
 
-    const addBtn = body.createDiv({ cls: "nexus-sidebar-countdown-add", text: "+ 添加倒计时" });
+    const addBtn = body.createDiv({ cls: "nexus-sidebar-countdown-add", text: "+ 添加项目" });
     addBtn.addEventListener("click", () => {
-      new InputModal(app, "添加倒计时", "名称（如：考试）", async (name) => {
-        new InputModal(app, "添加倒计时", "目标日期（如 2026-06-17 或 2026.6.17）", async (date) => {
+      new InputModal(app, "添加倒计时项目", "项目名称（如：考试）", async (name) => {
+        new InputModal(app, "添加倒计时项目", "目标日期（如 2026-06-17 或 2026.6.17）", async (date) => {
           plugin.settings.countdowns.push({ name, targetDate: normalizeDateStr(date) });
           await plugin.saveSettings();
           render();
