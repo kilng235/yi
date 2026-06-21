@@ -1312,15 +1312,16 @@
   gap: 12px;
   align-items: center;
   padding: 10px 14px;
-  background: var(--nx-bg-card);
+  background: color-mix(in srgb, var(--nx-bg-card) 90%, transparent);
   border-radius: 14px;
   border: 1px solid var(--nx-border);
-  margin-bottom: 16px;
+  margin-bottom: 18px;
   position: sticky;
   top: 4px;
   z-index: 5;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-  backdrop-filter: blur(8px);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02), inset 0 1px 0 rgba(255,255,255,0.4);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .nexus-notes-search {
@@ -1330,15 +1331,29 @@
 }
 
 .nexus-notes-search::before {
-  content: "⌕";
+  content: "";
   position: absolute;
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  background: currentColor;
   color: var(--nx-text-muted);
-  font-size: 1.1em;
+  opacity: 0.55;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.3-4.3'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.3-4.3'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-size: contain;
   pointer-events: none;
-  opacity: 0.6;
+  transition: opacity 0.2s, color 0.2s;
+}
+
+.nexus-notes-search:focus-within::before {
+  opacity: 0.9;
+  color: var(--nx-accent);
 }
 
 .nexus-notes-search-input {
@@ -1401,15 +1416,28 @@
   background: transparent;
   border: 1px solid var(--nx-border);
   border-radius: 10px;
-  padding: 7px 13px;
+  padding: 7px 12px 7px 10px;
   color: var(--nx-text-muted);
   cursor: pointer;
   font-size: 0.8em;
   font-weight: 500;
   transition: all 0.18s ease;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+}
+
+.nexus-notes-archive-toggle::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  background: currentColor;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 8v13H3V8'/%3E%3Cpath d='M1 3h22v5H1z'/%3E%3Cline x1='10' y1='12' x2='14' y2='12'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 8v13H3V8'/%3E%3Cpath d='M1 3h22v5H1z'/%3E%3Cline x1='10' y1='12' x2='14' y2='12'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-size: contain;
 }
 
 .nexus-notes-archive-toggle:hover {
@@ -1427,6 +1455,26 @@
   column-count: 3;
   column-gap: 14px;
   flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--nx-accent) 30%, transparent) transparent;
+}
+
+.nexus-notes-grid::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nexus-notes-grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.nexus-notes-grid::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--nx-accent) 30%, transparent);
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+
+.nexus-notes-grid::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--nx-accent) 50%, transparent);
 }
 
 @media (max-width: 1100px) {
@@ -1440,35 +1488,85 @@
 .nexus-notes-empty {
   text-align: center;
   color: var(--nx-text-muted);
-  padding: 80px 20px;
+  padding: 100px 20px 60px;
   font-size: 0.95em;
-  opacity: 0.7;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  grid-column: 1 / -1;
 }
 
 .nexus-notes-empty::before {
-  content: "📝";
-  font-size: 2.4em;
-  opacity: 0.4;
+  content: "";
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--nx-accent) 12%, transparent), color-mix(in srgb, var(--nx-accent-light) 8%, transparent));
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpolyline points='14 2 14 8 20 8'/%3E%3Cline x1='9' y1='13' x2='15' y2='13'/%3E%3Cline x1='9' y1='17' x2='13' y2='17'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpolyline points='14 2 14 8 20 8'/%3E%3Cline x1='9' y1='13' x2='15' y2='13'/%3E%3Cline x1='9' y1='17' x2='13' y2='17'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-size: contain;
+  color: var(--nx-accent);
+  opacity: 0.7;
+  margin-bottom: 4px;
+  animation: nexus-empty-float 4s ease-in-out infinite;
+}
+
+@keyframes nexus-empty-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.nexus-notes-empty-text {
+  font-size: 1em;
+  font-weight: 500;
+  color: var(--nx-text);
+  opacity: 0.75;
+  letter-spacing: 0.01em;
+}
+
+.nexus-notes-empty-hint {
+  font-size: 0.82em;
+  color: var(--nx-text-muted);
+  opacity: 0.65;
+  max-width: 320px;
+  line-height: 1.5;
 }
 
 .nexus-note-card {
   break-inside: avoid;
   display: inline-block;
   width: 100%;
-  background: linear-gradient(180deg, var(--nx-bg-card) 0%, color-mix(in srgb, var(--nx-bg-card) 96%, var(--nx-bg)) 100%);
+  background:
+    linear-gradient(180deg, var(--nx-bg-card) 0%, color-mix(in srgb, var(--nx-bg-card) 96%, var(--nx-bg)) 100%);
   border: 1px solid var(--nx-border);
   border-radius: 14px;
-  padding: 14px 14px 10px;
+  padding: 0;
   margin-bottom: 14px;
   cursor: pointer;
   position: relative;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  animation: nexus-card-enter 0.3s ease-out backwards;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  animation: nexus-card-enter 0.32s ease-out backwards;
   overflow: hidden;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+}
+
+.nexus-note-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--nx-accent) 0%, var(--nx-accent-light) 100%);
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+
+.nexus-note-card:hover::before {
+  opacity: 0.6;
 }
 
 @keyframes nexus-card-enter {
@@ -1477,18 +1575,27 @@
 }
 
 .nexus-note-card:hover {
-  border-color: color-mix(in srgb, var(--nx-accent) 35%, var(--nx-border));
-  box-shadow: 0 4px 12px rgba(0,0,0,0.04), 0 8px 24px color-mix(in srgb, var(--nx-accent) 8%, transparent);
-  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--nx-accent) 40%, var(--nx-border));
+  box-shadow: 0 6px 14px rgba(0,0,0,0.04), 0 12px 28px color-mix(in srgb, var(--nx-accent) 10%, transparent);
+  transform: translateY(-3px);
 }
 
 .nexus-note-card--pinned {
-  border-left: 3px solid var(--nx-accent);
-  background: linear-gradient(135deg, color-mix(in srgb, var(--nx-accent) 4%, var(--nx-bg-card)) 0%, var(--nx-bg-card) 60%);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--nx-accent) 5%, var(--nx-bg-card)) 0%, var(--nx-bg-card) 60%);
+  border-color: color-mix(in srgb, var(--nx-accent) 18%, var(--nx-border));
+}
+
+.nexus-note-card--pinned::before {
+  opacity: 1;
 }
 
 .nexus-note-card--pinned:hover {
-  border-left-color: var(--nx-accent);
+  border-color: color-mix(in srgb, var(--nx-accent) 45%, var(--nx-border));
+}
+
+.nexus-note-card-content {
+  padding: 14px 14px 10px;
 }
 
 .nexus-note-card-header {
@@ -1500,8 +1607,29 @@
 
 .nexus-note-card-pin {
   flex-shrink: 0;
-  font-size: 0.9em;
-  filter: drop-shadow(0 1px 2px color-mix(in srgb, var(--nx-accent) 40%, transparent));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--nx-accent) 14%, transparent);
+  color: var(--nx-accent);
+  font-size: 0.65em;
+  filter: drop-shadow(0 1px 1px color-mix(in srgb, var(--nx-accent) 25%, transparent));
+}
+
+.nexus-note-card-pin::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  background: currentColor;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M16 12V4h1V2H7v2h1v8l-2 2v2h6v6h2v-6h6v-2l-2-2z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M16 12V4h1V2H7v2h1v8l-2 2v2h6v6h2v-6h6v-2l-2-2z'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-size: contain;
 }
 
 .nexus-note-card-title {
@@ -1651,51 +1779,68 @@
   position: absolute;
   bottom: 28px;
   right: 28px;
-  width: 52px;
-  height: 52px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--nx-accent) 0%, var(--nx-accent-light) 100%);
   color: #fff;
-  font-size: 1.9em;
-  font-weight: 300;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--nx-accent) 35%, transparent), 0 2px 4px rgba(0,0,0,0.1);
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--nx-accent) 35%, transparent), 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
   z-index: 20;
   user-select: none;
   border: none;
   animation: nexus-fab-pulse 3s ease-in-out infinite;
 }
 
-@keyframes nexus-fab-pulse {
-  0%, 100% { box-shadow: 0 4px 14px color-mix(in srgb, var(--nx-accent) 35%, transparent), 0 2px 4px rgba(0,0,0,0.1); }
-  50% { box-shadow: 0 4px 14px color-mix(in srgb, var(--nx-accent) 35%, transparent), 0 2px 4px rgba(0,0,0,0.1), 0 0 0 8px color-mix(in srgb, var(--nx-accent) 0%, transparent); }
+.nexus-notes-add-fab::before {
+  content: "";
+  width: 22px;
+  height: 22px;
+  background: currentColor;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-size: contain;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.nexus-notes-add-fab::before {
+.nexus-notes-add-fab::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.25);
   opacity: 0;
   transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+@keyframes nexus-fab-pulse {
+  0%, 100% { box-shadow: 0 6px 18px color-mix(in srgb, var(--nx-accent) 35%, transparent), 0 2px 4px rgba(0,0,0,0.1); }
+  50% { box-shadow: 0 6px 18px color-mix(in srgb, var(--nx-accent) 35%, transparent), 0 2px 4px rgba(0,0,0,0.1), 0 0 0 10px color-mix(in srgb, var(--nx-accent) 0%, transparent); }
 }
 
 .nexus-notes-add-fab:hover {
-  transform: scale(1.08) rotate(90deg);
-  box-shadow: 0 6px 20px color-mix(in srgb, var(--nx-accent) 45%, transparent), 0 4px 8px rgba(0,0,0,0.12);
+  transform: scale(1.08);
+  box-shadow: 0 10px 26px color-mix(in srgb, var(--nx-accent) 45%, transparent), 0 4px 8px rgba(0,0,0,0.12);
 }
 
 .nexus-notes-add-fab:hover::before {
+  transform: rotate(90deg);
+}
+
+.nexus-notes-add-fab:hover::after {
   opacity: 1;
 }
 
 .nexus-notes-add-fab:active {
-  transform: scale(0.96) rotate(90deg);
+  transform: scale(0.96);
 }
 
 /* ===== NOTE EDITOR MODAL ===== */

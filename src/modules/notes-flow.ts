@@ -114,7 +114,7 @@ function renderToolbar(
 
   const archiveToggle = toolbar.createEl("button", {
     cls: `nexus-notes-archive-toggle${state.showArchived ? " nexus-notes-archive-toggle--active" : ""}`,
-    text: state.showArchived ? "📜 查看归档中" : "📜 归档",
+    text: state.showArchived ? "查看归档" : "归档",
   });
   archiveToggle.addEventListener("click", () => {
     state.showArchived = !state.showArchived;
@@ -134,9 +134,16 @@ function renderFlowGrid(
   const grid = el.createDiv({ cls: "nexus-notes-grid" });
 
   if (notes.length === 0) {
-    grid.createDiv({
-      cls: "nexus-notes-empty",
-      text: isEmptyArchived ? "归档为空" : "暂无小记，点击右下角 + 创建",
+    const empty = grid.createDiv({ cls: "nexus-notes-empty" });
+    empty.createDiv({
+      cls: "nexus-notes-empty-text",
+      text: isEmptyArchived ? "归档空空如也" : "还没有小记",
+    });
+    empty.createDiv({
+      cls: "nexus-notes-empty-hint",
+      text: isEmptyArchived
+        ? "归档的小记会在这里显示"
+        : "点击右下角 + 按钮，或按 Ctrl+Enter 快速创建第一条小记",
     });
     return;
   }
@@ -155,9 +162,11 @@ function renderNoteCard(
   const card = el.createDiv({ cls: "nexus-note-card" });
   if (note.pinned) card.addClass("nexus-note-card--pinned");
 
-  const header = card.createDiv({ cls: "nexus-note-card-header" });
+  const content = card.createDiv({ cls: "nexus-note-card-content" });
+
+  const header = content.createDiv({ cls: "nexus-note-card-header" });
   if (note.pinned) {
-    header.createSpan({ text: "📌", cls: "nexus-note-card-pin" });
+    header.createSpan({ cls: "nexus-note-card-pin" });
   }
   header.createEl("h4", { text: note.title, cls: "nexus-note-card-title" });
 
@@ -225,18 +234,18 @@ function renderNoteCard(
   });
 
   if (note.body) {
-    const body = card.createDiv({ cls: "nexus-note-card-body" });
+    const body = content.createDiv({ cls: "nexus-note-card-body" });
     body.setText(note.body);
   }
 
   if (note.tags.length > 0) {
-    const tags = card.createDiv({ cls: "nexus-note-card-tags" });
+    const tags = content.createDiv({ cls: "nexus-note-card-tags" });
     for (const t of note.tags) {
       tags.createSpan({ text: `#${t}`, cls: "nexus-note-card-tag" });
     }
   }
 
-  const footer = card.createDiv({ cls: "nexus-note-card-footer" });
+  const footer = content.createDiv({ cls: "nexus-note-card-footer" });
   footer.createSpan({ text: formatDate(note.updatedAt), cls: "nexus-note-card-date" });
 
   card.addEventListener("click", (e) => {
@@ -252,7 +261,9 @@ function renderAddButton(
   app: App,
   sync: NotesSync
 ) {
-  const addBtn = el.createDiv({ cls: "nexus-notes-add-fab", text: "+" });
+  const addBtn = el.createDiv({ cls: "nexus-notes-add-fab" });
+  addBtn.setAttribute("aria-label", "新建小记");
+  addBtn.setAttribute("title", "新建小记 (Ctrl+Enter)");
   addBtn.addEventListener("click", () => {
     new NoteEditorModal(app, "create", null, async (data) => {
       await sync.addNote(data.title, data.body, data.tags);
