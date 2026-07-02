@@ -1,8 +1,9 @@
 import { App, TFile } from "obsidian";
 import { Note } from "./types";
 
-const NOTES_DIR = "hubstack/notes";
-const ARCHIVE_DIR = "hubstack/notes-archive";
+const NOTES_JSON = "hubstack/notes.json";
+const LEGACY_NOTES_DIR = "hubstack/notes";
+const LEGACY_ARCHIVE_DIR = "hubstack/notes-archive";
 
 export class NotesSync {
   private app: App;
@@ -21,7 +22,7 @@ export class NotesSync {
   }
 
   async init() {
-    await this.ensureDirs();
+    await this.ensureDir();
     await this.load();
     this.registerFileWatcher();
   }
@@ -37,50 +38,64 @@ export class NotesSync {
     return this.notes;
   }
 
-  private async ensureDirs() {
-    for (const dir of [NOTES_DIR, ARCHIVE_DIR]) {
-      try {
-        const exists = await this.app.vault.adapter.exists(dir);
-        if (!exists) await this.app.vault.createFolder(dir);
-      } catch (e) {
-        console.error(`Hubstack: failed to create ${dir}`, e);
-      }
+  private async ensureDir() {
+    try {
+      const dir = "hubstack";
+      const exists = await this.app.vault.adapter.exists(dir);
+      if (!exists) await this.app.vault.createFolder(dir);
+    } catch (e) {
+      console.error("Hubstack: failed to ensure hubstack dir", e);
     }
   }
 
   private registerFileWatcher() {
     this.eventRef = this.app.vault.on("modify", (file) => {
-      if (file instanceof TFile && this.isNoteFile(file.path)) {
+      if (file instanceof TFile && file.path === NOTES_JSON) {
         this.load();
       }
     });
-    this.app.vault.on("create", (file) => {
-      if (file instanceof TFile && this.isNoteFile(file.path)) {
-        this.load();
-      }
-    });
-    this.app.vault.on("delete", (file) => {
-      if (file instanceof TFile && this.isNoteFile(file.path)) {
-        this.load();
-      }
-    });
-  }
-
-  private isNoteFile(path: string): boolean {
-    return path.startsWith(NOTES_DIR + "/") || path.startsWith(ARCHIVE_DIR + "/");
   }
 
   async load() {
     if (this.loading) return;
     this.loading = true;
     try {
-      const notes: Note[] = [];
-      await this.collectNotes(NOTES_DIR, false, notes);
-      await this.collectNotes(ARCHIVE_DIR, true, notes);
-      this.notes = notes.sort(this.compareNotes);
+      const exists = await this.app.vault.adapter.exists(NOTES_JSON);
+      if (exists) {
+        const raw = await this.app.vault.adapter.read(NOTES_JSON);
+        this.notes = this.parseJson(raw).sort(this.compareNotes);
+      } else {
+        // First run or no JSON yet — try migrating from legacy .md files
+        this.notes = await this.migrateFromMarkdown();
+        if (this.notes.length > 0) {
+          await this.save();
+          await this.cleanupLegacyDirs();
+        }
+      }
       await this.notifyCallbacks();
     } finally {
       this.loading = false;
+    }
+  }
+
+  private parseJson(raw: string): Note[] {
+    try {
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data)) return [];
+      return data.map((item: any) => ({
+        id: String(item.id || ""),
+        title: item.title || "无标题",
+        body: item.body || "",
+        tags: Array.isArray(item.tags) ? item.tags.map(String) : [],
+        pinned: item.pinned === true,
+        archived: item.archived === true,
+        createdAt: item.createdAt || new Date().toISOString(),
+        updatedAt: item.updatedAt || new Date().toISOString(),
+        filePath: "",
+      }));
+    } catch (e) {
+      console.error("Hubstack: failed to parse notes.json", e);
+      return [];
     }
   }
 
@@ -89,27 +104,16 @@ export class NotesSync {
     return (b.updatedAt || "").localeCompare(a.updatedAt || "");
   }
 
-  private async collectNotes(dir: string, archived: boolean, out: Note[]) {
-    let folder;
+  private async save() {
     try {
-      folder = this.app.vault.getAbstractFileByPath(dir);
-    } catch { return; }
-    if (!folder || !("children" in folder)) return;
-    for (const file of (folder as any).children as TFile[]) {
-      if (file.extension !== "md") continue;
-      const note = await this.parseNoteFile(file, archived);
-      if (note) out.push(note);
+      const json = JSON.stringify(this.notes, null, 2);
+      await this.app.vault.adapter.write(NOTES_JSON, json);
+    } catch (e) {
+      console.error("Hubstack: failed to save notes.json", e);
     }
   }
 
-  private async parseNoteFile(file: TFile, archived: boolean): Promise<Note | null> {
-    try {
-      const content = await this.app.vault.cachedRead(file);
-      return parseNoteMarkdown(content, file.path, archived);
-    } catch {
-      return null;
-    }
-  }
+  // --- Public API ---
 
   async addNote(title: string, body: string, tags: string[]): Promise<Note | null> {
     const id = Date.now().toString(36);
@@ -123,23 +127,26 @@ export class NotesSync {
       archived: false,
       createdAt: now,
       updatedAt: now,
-      filePath: `${NOTES_DIR}/${id}.md`,
+      filePath: "",
     };
-    await this.writeNote(note);
-    await this.load();
+    this.notes.push(note);
+    this.notes.sort(this.compareNotes);
+    await this.save();
+    await this.notifyCallbacks();
     return note;
   }
 
-  async updateNote(id: string, patch: Partial<Pick<Note, "title" | "body" | "tags" | "pinned">>): Promise<void> {
-    const note = this.notes.find((n) => n.id === id);
-    if (!note) return;
-    const updated: Note = {
-      ...note,
+  async updateNote(id: string, patch: Partial<Pick<Note, "title" | "body" | "tags" | "pinned" | "archived">>): Promise<void> {
+    const idx = this.notes.findIndex((n) => n.id === id);
+    if (idx === -1) return;
+    this.notes[idx] = {
+      ...this.notes[idx],
       ...patch,
       updatedAt: new Date().toISOString(),
     };
-    await this.writeNote(updated);
-    await this.load();
+    this.notes.sort(this.compareNotes);
+    await this.save();
+    await this.notifyCallbacks();
   }
 
   async updateNoteSilent(id: string, patch: Partial<Pick<Note, "title" | "body" | "tags">>): Promise<void> {
@@ -152,15 +159,9 @@ export class NotesSync {
   }
 
   async deleteNote(id: string): Promise<void> {
-    const note = this.notes.find((n) => n.id === id);
-    if (!note) return;
-    try {
-      const file = this.app.vault.getFileByPath(note.filePath);
-      if (file) await this.app.vault.delete(file);
-    } catch (e) {
-      console.error("Hubstack: failed to delete note", e);
-    }
-    await this.load();
+    this.notes = this.notes.filter((n) => n.id !== id);
+    await this.save();
+    await this.notifyCallbacks();
   }
 
   async togglePin(id: string): Promise<void> {
@@ -173,29 +174,7 @@ export class NotesSync {
     const note = this.notes.find((n) => n.id === id);
     if (!note) return;
     if (note.archived === archived) return;
-    const targetDir = archived ? ARCHIVE_DIR : NOTES_DIR;
-    const newPath = `${targetDir}/${note.id}.md`;
-    try {
-      const file = this.app.vault.getFileByPath(note.filePath);
-      if (file) await this.app.vault.rename(file, newPath);
-    } catch (e) {
-      console.error("Hubstack: failed to archive note", e);
-    }
-    await this.load();
-  }
-
-  private async writeNote(note: Note) {
-    const content = serializeNoteMarkdown(note);
-    try {
-      const exists = await this.app.vault.adapter.exists(note.filePath);
-      if (exists) {
-        await this.app.vault.adapter.write(note.filePath, content);
-      } else {
-        await this.app.vault.create(note.filePath, content);
-      }
-    } catch (e) {
-      console.error("Hubstack: failed to write note", e);
-    }
+    await this.updateNote(id, { archived });
   }
 
   private async notifyCallbacks() {
@@ -204,7 +183,55 @@ export class NotesSync {
       try { await cb(this.notes); } catch (e) { console.error(e); }
     }
   }
+
+  // --- Migration: legacy .md files → single JSON ---
+
+  private async migrateFromMarkdown(): Promise<Note[]> {
+    const notes: Note[] = [];
+    await this.collectLegacyNotes(LEGACY_NOTES_DIR, false, notes);
+    await this.collectLegacyNotes(LEGACY_ARCHIVE_DIR, true, notes);
+    if (notes.length > 0) {
+      console.log(`Hubstack: migrated ${notes.length} notes from .md to JSON`);
+    }
+    return notes;
+  }
+
+  private async collectLegacyNotes(dir: string, archived: boolean, out: Note[]) {
+    let folder;
+    try {
+      folder = this.app.vault.getAbstractFileByPath(dir);
+    } catch { return; }
+    if (!folder || !("children" in folder)) return;
+    for (const file of (folder as any).children as TFile[]) {
+      if (file.extension !== "md") continue;
+      try {
+        const content = await this.app.vault.cachedRead(file);
+        const note = parseNoteMarkdown(content, file.path, archived);
+        if (note) {
+          note.filePath = "";
+          out.push(note);
+        }
+      } catch { /* skip unreadable files */ }
+    }
+  }
+
+  private async cleanupLegacyDirs() {
+    for (const dir of [LEGACY_NOTES_DIR, LEGACY_ARCHIVE_DIR]) {
+      try {
+        const folder = this.app.vault.getAbstractFileByPath(dir);
+        if (folder) {
+          const backupPath = `${dir}-backup-${Date.now().toString(36)}`;
+          await this.app.vault.rename(folder as any, backupPath);
+          console.log(`Hubstack: legacy dir "${dir}" → "${backupPath}"`);
+        }
+      } catch (e) {
+        console.error(`Hubstack: failed to cleanup legacy dir ${dir}`, e);
+      }
+    }
+  }
 }
+
+// --- Standalone helpers (kept for backward compat / migration) ---
 
 export function parseNoteMarkdown(raw: string, filePath: string, archived: boolean): Note | null {
   const fm = parseFrontmatter(raw);
