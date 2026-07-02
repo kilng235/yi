@@ -131,29 +131,161 @@ export class EpubReaderView extends ItemView {
       const buffer = await this.app.vault.readBinary(this.file!);
       this.book = ePub(buffer);
 
-      this.rendition = this.book.renderTo(readerArea, {
-        width: "100%",
-        height: "100%",
+      // Wait for epub metadata to resolve
+      await this.book.ready;
+
+      // Force layout: measure reader area height before rendering epub
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => resolve());
+        });
       });
 
-      // Track current position for save on close (register BEFORE display)
+      const rect = readerArea.getBoundingClientRect();
+      readerArea.style.height = `${rect.height}px`;
+
+      this.rendition = this.book.renderTo(readerArea, {
+        width: String(Math.floor(rect.width)) + "px",
+        height: String(Math.floor(rect.height)) + "px",
+      });
+
+      // Track current position for save on close
       this.rendition.on("relocated", (location: any) => {
         if (location?.start?.cfi) {
           this.lastCfi = location.start.cfi;
+          console.log("[EpubReader] Saved CFI:", this.lastCfi);
         }
       });
+      
+      // Also try to get current location via epubjs API
+      const getCurrentLocationCfi = async (): Promise<string | null> => {
+        try {
+          if (typeof this.rendition.getCurrentLocation === 'function') {
+            const loc = await this.rendition.getCurrentLocation();
+            if (loc?.end?.cfi) return loc.end.cfi;
+            if (loc?.start?.cfi) return loc.start.cfi;
+          }
+        } catch (e) {
+          console.warn("[EpubReader] getCurrentLocation failed:", e);
+        }
+        return this.lastCfi;
+      };
 
       // Restore reading position from last session, or start from beginning
       const savedCfi = this.plugin!.settings.readingStats[this.file!.path]?.lastLocationCfi;
-      await this.rendition.display(savedCfi || undefined);
-
-      // Fallback: capture current position after display (in case relocated doesn't fire)
-      setTimeout(() => {
-        const currentLoc = this.rendition?.currentLocation();
-        if (currentLoc?.start?.cfi && !this.lastCfi) {
-          this.lastCfi = currentLoc.start.cfi;
+      console.log("[EpubReader] Restoring saved CFI:", savedCfi);
+      if (savedCfi && typeof this.rendition.display === "function") {
+        let restored = false;
+        try {
+          // Try direct CFI restoration first (works in some epubjs versions)
+          await this.rendition.display(savedCfi);
+          restored = true;
+          console.log("[EpubReader] Direct CFI restore succeeded");
+        } catch (e) {
+          console.warn("[EpubReader] Direct CFI display failed, trying chapter-based restore:", savedCfi, e);
         }
-      }, 500);
+
+        if (!restored) {
+          // Extract spine index and chapter from CFI: epubcfi({spinePath}/{frag}...)
+          const cfMatch = savedCfi.match(/epubcfi\((\/[^/]+)\/([^/]+)\//);
+          if (cfMatch) {
+            const spinePath = cfMatch[1]; // e.g. /6
+            const fragPart = cfMatch[2];  // e.g. 4
+            const items = this.book.spine?.spineItems || [];
+            // Find the chapter by spine index (first number segment)
+            const idxMatch = spinePath.match(/^\/(\d+)/);
+            if (idxMatch) {
+              const idx = parseInt(idxMatch[1]);
+              const target = items[idx];
+              if (target) {
+                await this.rendition.display(target.href);
+                setTimeout(() => {
+                  try {
+                    const allFrames = document.querySelectorAll('iframe');
+                    for (const iframe of Array.from(allFrames)) {
+                      const bodyEl = iframe.contentDocument?.body;
+                      if (!bodyEl) continue;
+                      // Try various selector forms based on fragPart
+                      const selectors = [
+                        `#${fragPart}`,
+                        `[name="${fragPart}"]`,
+                        `.fragment-${fragPart}`,
+                        `.chapter-ref-${fragPart}`,
+                        `a[name="${fragPart}"]`,
+                        `section#${fragPart}`,
+                        `div#${fragPart}`,
+                      ];
+                      for (const sel of selectors) {
+                        const el = bodyEl.querySelector(sel);
+                        if (el && el.scrollIntoView) {
+                          el.scrollIntoView({ block: 'start' });
+                          break;
+                        }
+                      }
+                    }
+                  } catch (e) {
+                    console.warn("[EpubReader] Scroll to position failed:", e);
+                  }
+                }, 800);
+              }
+            }
+          }
+        }
+
+        if (!restored) {
+          await this.rendition.display();
+        }
+      } else {
+        await this.rendition.display();
+      }
+
+      // Save position when user stays on current page for at least 10 seconds
+      let saveTimer: ReturnType<typeof setTimeout> | null = null;
+      const performSave = async () => {
+        if (!this.file || !this.plugin) return;
+        // Try to get most accurate location via epubjs API
+        let cfiToSave = this.lastCfi;
+        try {
+          if (typeof this.rendition.getCurrentLocation === 'function') {
+            const loc = await this.rendition.getCurrentLocation();
+            if (loc?.end?.cfi) cfiToSave = loc.end.cfi;
+            else if (loc?.start?.cfi) cfiToSave = loc.start.cfi;
+          }
+        } catch (e) {
+          console.warn("[EpubReader] Location fetch failed, using cached CFI:", e);
+        }
+        if (!cfiToSave) return;
+        
+        const stats = this.plugin.settings.readingStats;
+        const key = this.file.path;
+        if (!stats[key]) {
+          stats[key] = {
+            filePath: key,
+            title: this.file.basename,
+            totalDurationMs: 0,
+            sessionCount: 0,
+            lastReadAt: "",
+          };
+        }
+        stats[key].lastLocationCfi = cfiToSave;
+        stats[key].lastReadAt = new Date().toISOString();
+        console.log("[EpubReader] Auto-saved CFI:", cfiToSave);
+        this.plugin.saveSettings();
+      };
+      
+      const scheduleSave = () => {
+        if (saveTimer) clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => performSave(), 10000);
+      };
+
+      // Schedule a save tick every time the page changes
+      const onRelocated = () => scheduleSave();
+      this.rendition.on("relocated", onRelocated);
+
+      // Initial schedule after display finishes
+      setTimeout(scheduleSave, 2000);
+
+      this.register(() => { if (saveTimer) clearTimeout(saveTimer); });
 
       // Theme
       const isDark = document.body.classList.contains("theme-dark");
@@ -167,7 +299,6 @@ export class EpubReaderView extends ItemView {
         this.rendition.themes.fontSize(`${fontSize}%`);
       });
 
-      // Keyboard navigation
       const handleKey = (e: KeyboardEvent) => {
         if (e.key === "ArrowLeft") this.rendition.prev();
         if (e.key === "ArrowRight") this.rendition.next();
@@ -178,6 +309,64 @@ export class EpubReaderView extends ItemView {
       // Arrow button navigation
       navPrev.addEventListener("click", () => this.rendition.prev());
       navNext.addEventListener("click", () => this.rendition.next());
+
+      // Touch swipe support for iPad/tablet
+      let touchStartX = 0;
+      let touchStartY = 0;
+      const SWIPE_THRESHOLD = 50; // minimum pixels to count as swipe
+      
+      const handleTouchStart = (e: TouchEvent) => {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      };
+      
+      const handleTouchEnd = (e: TouchEvent) => {
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+        
+        // Only trigger if horizontal swipe is dominant
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > SWIPE_THRESHOLD) {
+          if (deltaX > 0) {
+            // Swipe right -> previous page
+            this.rendition.prev();
+          } else {
+            // Swipe left -> next page
+            this.rendition.next();
+          }
+        }
+      };
+      
+      readerArea.addEventListener("touchstart", handleTouchStart, { passive: true });
+      readerArea.addEventListener("touchend", handleTouchEnd, { passive: true });
+      this.register(() => {
+        readerArea.removeEventListener("touchstart", handleTouchStart);
+        readerArea.removeEventListener("touchend", handleTouchEnd);
+      });
+
+      // Auto-reflow on orientation change (iPad/tablet)
+      let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+      const handleResize = () => {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          if (this.rendition && this.book) {
+            const newRect = readerArea.getBoundingClientRect();
+            if (newRect.width > 0 && newRect.height > 0) {
+              readerArea.style.height = `${newRect.height}px`;
+              this.rendition.resize(Math.floor(newRect.width), Math.floor(newRect.height));
+            }
+          }
+        }, 300); // debounce 300ms
+      };
+      
+      window.addEventListener("orientationchange", handleResize);
+      window.addEventListener("resize", handleResize);
+      this.register(() => {
+        window.removeEventListener("orientationchange", handleResize);
+        window.removeEventListener("resize", handleResize);
+        if (resizeTimer) clearTimeout(resizeTimer);
+      });
 
       // Start reading
       this.readingStartTime = Date.now();

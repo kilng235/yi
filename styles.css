@@ -8,17 +8,17 @@
 
 /* --- Aurora --- */
 .nexus-root[data-theme="aurora"] {
-  --nx-bg: #eeeaf5;
+  --nx-bg: #f5f5f5;
   --nx-bg-card: #ffffff;
-  --nx-bg-card-hover: #f8f7fc;
-  --nx-bg-sidebar: rgba(139,92,246,0.04);
-  --nx-border: rgba(139,92,246,0.10);
-  --nx-text: #1e1b2e;
+  --nx-bg-card-hover: #f8f8f8;
+  --nx-bg-sidebar: rgba(0,0,0,0.02);
+  --nx-border: #e5e5e5;
+  --nx-text: #1a1a1a;
   --nx-text-muted: #6b7280;
   --nx-accent: #7c3aed;
   --nx-accent-light: #6366f1;
-  --nx-radius: 14px;
-  --nx-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(139,92,246,0.04);
+  --nx-radius: 0;
+  --nx-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
   --nx-font: 'DM Sans', 'Noto Sans SC', var(--font-interface);
 }
 
@@ -92,7 +92,7 @@
   right: 8px;
   width: 28px;
   height: 28px;
-  border-radius: 6px;
+  border-radius: 0;
   background: rgba(0, 0, 0, 0.4);
   color: #fff;
   display: flex;
@@ -122,7 +122,7 @@
   width: 260px;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(8px);
-  border-radius: 0 0 0 8px;
+  border-radius: 0;
   padding: 0;
   max-height: 0;
   overflow: hidden;
@@ -177,7 +177,7 @@
 .nexus-banner-reset-btn {
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  border-radius: 0;
   color: #e2e8f0;
   padding: 3px 10px;
   font-size: 0.75em;
@@ -200,7 +200,7 @@
   flex: 1;
   background: var(--nx-accent);
   border: none;
-  border-radius: 4px;
+  border-radius: 0;
   color: #fff;
   padding: 3px 10px;
   font-size: 0.75em;
@@ -265,7 +265,7 @@
 .nexus-section-dot {
   width: 8px;
   height: 8px;
-  border-radius: 50%;
+  border-radius: 0;
   flex-shrink: 0;
 }
 
@@ -294,22 +294,8 @@
 .nexus-todo-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   margin-bottom: 12px;
-}
-
-.nexus-todo-header-main {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-
-.nexus-todo-header h3 {
-  margin: 0;
-  font-size: 1em;
-  font-weight: 600;
-  flex-shrink: 0;
 }
 
 .nexus-todo-stats {
@@ -323,7 +309,7 @@
   font-size: 0.72em;
   line-height: 1;
   padding: 4px 8px;
-  border-radius: 999px;
+  border-radius: 0;
   border: 1px solid var(--nx-border);
   background: var(--nx-bg-sidebar);
   color: var(--nx-text-muted);
@@ -358,7 +344,7 @@
   align-items: center;
   gap: 8px;
   padding: 6px 8px;
-  border-radius: 6px;
+  border-radius: 0;
   transition: background 0.15s;
 }
 
@@ -385,7 +371,7 @@
   font-size: 0.7em;
   color: var(--nx-text-muted);
   background: var(--nx-bg-sidebar);
-  border-radius: 4px;
+  border-radius: 0;
   padding: 1px 6px;
 }
 
@@ -417,7 +403,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: 0;
   cursor: pointer;
   font-size: 18px;
   color: var(--nx-text-muted);
@@ -472,7 +458,7 @@
 
 /* Cell base */
 .nexus-heatmap-cell {
-  border-radius: 4px;
+  border-radius: 0;
   position: relative;
   cursor: default;
 }
@@ -504,7 +490,7 @@
   background: #24292f;
   color: #fff;
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: 0;
   font-size: 0.65em;
   white-space: nowrap;
   pointer-events: none;
@@ -574,7 +560,7 @@
 
 .nexus-book-card {
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 0;
   overflow: hidden;
   transition: transform 0.15s, box-shadow 0.15s;
   border: 1px solid var(--nx-border);
@@ -646,7 +632,7 @@
 .nexus-epub-back-btn {
   background: none;
   border: 1px solid var(--nx-border);
-  border-radius: 6px;
+  border-radius: 0;
   padding: 4px 10px;
   color: var(--nx-text);
   cursor: pointer;
@@ -764,7 +750,7 @@
   width: 100%;
   height: 6px;
   background: var(--nx-border);
-  border-radius: 3px;
+  border-radius: 0;
   overflow: hidden;
   margin-bottom: 10px;
 }
@@ -772,7 +758,7 @@
 .nexus-balance-bar {
   height: 100%;
   background: var(--nx-accent);
-  border-radius: 3px;
+  border-radius: 0;
   transition: width 0.3s;
 }
 
@@ -787,7 +773,7 @@
   color: var(--nx-text-muted);
   background: var(--nx-bg-sidebar);
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 .nexus-balance-status {
@@ -820,7 +806,7 @@
 }
 
 .nexus-sidebar-section > :last-child {
-  border-radius: 0 0 calc(var(--nx-radius) - 1px) calc(var(--nx-radius) - 1px);
+  border-radius: 0;
   overflow: visible;
 }
 
@@ -841,7 +827,7 @@
   content: "";
   width: 7px;
   height: 7px;
-  border-radius: 50%;
+  border-radius: 0;
   flex-shrink: 0;
 }
 
@@ -937,7 +923,7 @@
   cursor: pointer;
   font-size: 0.9em;
   padding: 0 2px;
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 .nexus-quick-link-item:hover .nexus-quick-link-delete {
@@ -1041,7 +1027,7 @@
   background: var(--nx-bg-sidebar);
   border: 1px solid var(--nx-border);
   border-left: 3px solid var(--nx-accent);
-  border-radius: 8px;
+  border-radius: 0;
   transition: background 0.15s, border-color 0.15s;
 }
 
@@ -1145,7 +1131,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 10px;
-  border-radius: 6px;
+  border-radius: 0;
   cursor: pointer;
   transition: background 0.15s;
 }
@@ -1178,25 +1164,27 @@
 
 /* ===== TODO ADD BUTTON ===== */
 .nexus-todo-add-btn {
-  background: var(--nx-accent);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 4px 12px;
+  background: transparent !important;
+  color: #b8a88a !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  padding: 4px 8px;
   font-size: 0.8em;
   cursor: pointer;
-  transition: opacity 0.15s;
+  transition: color 0.18s ease;
 }
 
 .nexus-todo-add-btn:hover {
-  opacity: 0.85;
+  color: #7a6b42 !important;
 }
 
 /* ===== MODAL ===== */
 .nexus-modal-input {
   padding: 8px 12px;
   border: 1px solid var(--nx-border);
-  border-radius: 6px;
+  border-radius: 0;
   background: var(--nx-bg-card);
   color: var(--nx-text);
   font-size: 14px;
@@ -1209,7 +1197,7 @@
 
 .nexus-modal-buttons button {
   padding: 6px 16px;
-  border-radius: 6px;
+  border-radius: 0;
   border: 1px solid var(--nx-border);
   background: var(--nx-bg-card);
   color: var(--nx-text);
@@ -1225,16 +1213,15 @@
 /* ===== TAB BAR ===== */
 .nexus-tab-bar-wrap {
   display: flex;
-  padding: 0 16px;
-  margin-top: 14px;
+  margin: 16px 16px 0;
   flex-shrink: 0;
 }
 
 .nexus-tab-bar {
   display: inline-flex;
   gap: 2px;
-  background: color-mix(in srgb, var(--nx-accent) 6%, var(--nx-bg-card));
-  border-radius: 12px;
+  background: #f5f5f5;
+  border-radius: 0;
   padding: 4px;
   border: 1px solid var(--nx-border);
   box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
@@ -1244,15 +1231,14 @@
   background: transparent;
   border: none;
   color: var(--nx-text-muted);
-  padding: 7px 18px;
-  border-radius: 9px;
+  width: 42px;
+  height: 38px;
+  padding: 0;
+  border-radius: 0;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 0.86em;
-  font-weight: 500;
-  letter-spacing: 0.01em;
+  justify-content: center;
   transition: color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.15s;
   position: relative;
 }
@@ -1265,8 +1251,7 @@
 .nexus-tab-btn--active {
   background: var(--nx-bg-card);
   color: var(--nx-accent);
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 2px 8px color-mix(in srgb, var(--nx-accent) 12%, transparent);
-  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.055), 0 2px 7px color-mix(in srgb, var(--nx-accent) 10%, transparent);
 }
 
 .nexus-tab-btn--active:hover {
@@ -1275,12 +1260,30 @@
 }
 
 .nexus-tab-btn-icon {
-  font-size: 1.05em;
-  line-height: 1;
+  width: 17px;
+  height: 17px;
+  background: currentColor;
+  mask-repeat: no-repeat;
+  -webkit-mask-repeat: no-repeat;
+  mask-size: contain;
+  -webkit-mask-size: contain;
 }
 
-.nexus-tab-btn-label {
-  font-weight: inherit;
+/* Inline SVG icons inherit button color */
+.nexus-tab-btn svg,
+.nexus-notes-sidebutton svg {
+  display: block;
+  color: inherit;
+}
+
+.nexus-tab-btn-icon--dashboard {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 10.5 12 3l9 7.5'/%3E%3Cpath d='M5 9.5V21h14V9.5'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 10.5 12 3l9 7.5'/%3E%3Cpath d='M5 9.5V21h14V9.5'/%3E%3C/svg%3E");
+}
+
+.nexus-tab-btn-icon--notes {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10z'/%3E%3Cpath d='M14 4v6h6'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V10z'/%3E%3Cpath d='M14 4v6h6'/%3E%3C/svg%3E");
 }
 
 .nexus-tab-content {
@@ -1302,7 +1305,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 14px 16px 96px;
+  padding: 16px 16px 16px;
   min-height: 0;
 }
 
@@ -1311,17 +1314,23 @@
   flex-wrap: wrap;
   gap: 12px;
   align-items: center;
-  padding: 10px 14px;
-  background: color-mix(in srgb, var(--nx-bg-card) 90%, transparent);
-  border-radius: 14px;
+  padding: 12px 16px;
+  background: var(--nx-bg-card);
   border: 1px solid var(--nx-border);
-  margin-bottom: 18px;
+  margin-bottom: 24px;
   position: sticky;
   top: 4px;
   z-index: 5;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02), inset 0 1px 0 rgba(255,255,255,0.4);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+}
+
+.nexus-notes-layout {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  position: relative;
+  overflow: hidden;
 }
 
 .nexus-notes-search {
@@ -1330,38 +1339,11 @@
   position: relative;
 }
 
-.nexus-notes-search::before {
-  content: "";
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 14px;
-  height: 14px;
-  background: currentColor;
-  color: var(--nx-text-muted);
-  opacity: 0.55;
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.3-4.3'/%3E%3C/svg%3E");
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.3-4.3'/%3E%3C/svg%3E");
-  mask-repeat: no-repeat;
-  -webkit-mask-repeat: no-repeat;
-  mask-size: contain;
-  -webkit-mask-size: contain;
-  pointer-events: none;
-  transition: opacity 0.2s, color 0.2s;
-}
-
-.nexus-notes-search:focus-within::before {
-  opacity: 0.9;
-  color: var(--nx-accent);
-}
-
 .nexus-notes-search-input {
   width: 100%;
-  background: color-mix(in srgb, var(--nx-bg) 80%, transparent);
+  background: var(--nx-bg, #fafaf9);
   border: 1px solid var(--nx-border);
-  border-radius: 10px;
-  padding: 8px 12px 8px 34px;
+  padding: 9px 14px;
   color: var(--nx-text);
   font-size: 0.9em;
   font-family: inherit;
@@ -1370,27 +1352,24 @@
 
 .nexus-notes-search-input::placeholder {
   color: var(--nx-text-muted);
-  opacity: 0.7;
+  opacity: 0.6;
 }
 
 .nexus-notes-search-input:focus {
   outline: none;
-  border-color: var(--nx-accent);
+  border-color: var(--nx-text-muted);
   background: var(--nx-bg-card);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--nx-accent) 15%, transparent);
+  box-shadow: none;
 }
 
 .nexus-notes-tags {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  display: none;
 }
 
 .nexus-notes-tag-chip {
   background: transparent;
   border: 1px solid var(--nx-border);
-  border-radius: 999px;
-  padding: 4px 11px;
+  padding: 5px 12px;
   color: var(--nx-text-muted);
   font-size: 0.78em;
   font-weight: 500;
@@ -1400,89 +1379,365 @@
 }
 
 .nexus-notes-tag-chip:hover {
-  border-color: color-mix(in srgb, var(--nx-accent) 50%, var(--nx-border));
-  color: var(--nx-accent);
-  background: color-mix(in srgb, var(--nx-accent) 6%, transparent);
+  border-color: var(--nx-text-muted);
+  color: var(--nx-text);
+  background: rgba(0,0,0,0.03);
 }
 
 .nexus-notes-tag-chip--active {
-  background: var(--nx-accent);
+  background: var(--nx-text);
   color: #fff;
-  border-color: var(--nx-accent);
-  box-shadow: 0 2px 6px color-mix(in srgb, var(--nx-accent) 30%, transparent);
+  border-color: var(--nx-text);
+  box-shadow: none;
 }
 
-.nexus-notes-archive-toggle {
+.nexus-notes-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 56px 16px 0;
+  background: var(--nx-bg, #fafaf9);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0,0,0,0.12) transparent;
+}
+
+.nexus-notes-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nexus-notes-body::-webkit-scrollbar-track {
   background: transparent;
-  border: 1px solid var(--nx-border);
-  border-radius: 10px;
-  padding: 7px 12px 7px 10px;
-  color: var(--nx-text-muted);
-  cursor: pointer;
-  font-size: 0.8em;
-  font-weight: 500;
-  transition: all 0.18s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 
-.nexus-notes-archive-toggle::before {
-  content: "";
+.nexus-notes-body::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.12);
+  border-radius: 0;
+  transition: background 0.2s;
+}
+
+.nexus-notes-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.2);
+}
+
+.nexus-notes-board {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 100%;
+  background: transparent;
+  padding-bottom: 12px;
+}
+
+.nexus-notes-sidepanel {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  width: 28px;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.nexus-notes-sidepanel-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  pointer-events: auto;
+}
+
+.nexus-notes-sidebutton {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--nx-border) !important;
+  border-radius: 0 !important;
+  background: var(--nx-bg-card, #fff) !important;
+  color: var(--nx-text-muted, #8a8477);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02) !important;
+  outline: none !important;
+}
+
+.nexus-notes-sidebutton:hover {
+  transform: none;
+  color: var(--nx-text);
+  border-color: var(--nx-text-muted) !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04) !important;
+  background: var(--nx-bg-card, #fff) !important;
+}
+
+.nexus-notes-sidebutton--primary {
+  background: var(--nx-bg-card, #fff) !important;
+  color: var(--nx-text-muted, #8a8477);
+  border: 1px solid var(--nx-border) !important;
+  font-weight: 600;
+  font-size: 1.1em;
+}
+
+.nexus-notes-sidebutton--active {
+  background: var(--nx-bg-card, #fff) !important;
+  color: var(--nx-text);
+  border-color: var(--nx-text-muted) !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
+}
+
+.nexus-notes-sidebutton-icon {
   width: 14px;
   height: 14px;
   background: currentColor;
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 8v13H3V8'/%3E%3Cpath d='M1 3h22v5H1z'/%3E%3Cline x1='10' y1='12' x2='14' y2='12'/%3E%3C/svg%3E");
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 8v13H3V8'/%3E%3Cpath d='M1 3h22v5H1z'/%3E%3Cline x1='10' y1='12' x2='14' y2='12'/%3E%3C/svg%3E");
   mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
   mask-size: contain;
   -webkit-mask-size: contain;
 }
 
-.nexus-notes-archive-toggle:hover {
+.nexus-notes-sidebutton-icon--add {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
+}
+
+.nexus-notes-sidebutton-icon--archive {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 8v13H3V8'/%3E%3Cpath d='M1 3h22v5H1z'/%3E%3Cline x1='10' y1='12' x2='14' y2='12'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 8v13H3V8'/%3E%3Cpath d='M1 3h22v5H1z'/%3E%3Cline x1='10' y1='12' x2='14' y2='12'/%3E%3C/svg%3E");
+}
+
+/* ---------- BOARD HEADER ---------- */
+.nexus-notes-board-header {
+  margin-bottom: 32px;
+}
+
+.nexus-notes-board-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0;
+  line-height: 1;
+}
+
+.nexus-notes-board-title-main {
+  font-size: 52px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
   color: var(--nx-text);
-  border-color: color-mix(in srgb, var(--nx-text-muted) 40%, var(--nx-border));
+  font-family: inherit;
 }
 
-.nexus-notes-archive-toggle--active {
-  background: color-mix(in srgb, var(--nx-accent) 10%, transparent);
-  color: var(--nx-accent);
-  border-color: color-mix(in srgb, var(--nx-accent) 40%, var(--nx-border));
+.nexus-notes-board-title-accent {
+  font-size: 52px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  color: var(--nx-text-muted);
+  font-family: inherit;
 }
 
-.nexus-notes-grid {
-  column-count: 3;
-  column-gap: 14px;
-  flex: 1;
-  scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--nx-accent) 30%, transparent) transparent;
+.nexus-notes-board-subtitle {
+  font-size: 13px;
+  color: var(--nx-text-muted);
+  margin-top: 8px;
+  letter-spacing: 0.02em;
 }
 
-.nexus-notes-grid::-webkit-scrollbar {
-  width: 6px;
+/* ---------- FEATURED / PINNED ---------- */
+.nexus-notes-featured {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 28px;
 }
 
-.nexus-notes-grid::-webkit-scrollbar-track {
-  background: transparent;
+.nexus-notes-featured-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 24px 28px;
 }
 
-.nexus-notes-grid::-webkit-scrollbar-thumb {
-  background: color-mix(in srgb, var(--nx-accent) 30%, transparent);
-  border-radius: 3px;
-  transition: background 0.2s;
+.nexus-notes-featured-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--nx-text-muted);
+  margin-bottom: 14px;
 }
 
-.nexus-notes-grid::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--nx-accent) 50%, transparent);
+.nexus-notes-featured-heading {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  color: var(--nx-text);
 }
 
-@media (max-width: 1100px) {
-  .nexus-notes-grid { column-count: 2; }
+.nexus-notes-featured-hint {
+  font-size: 13px;
+  color: var(--nx-text-muted);
+  margin-top: 6px;
 }
 
-@media (max-width: 700px) {
-  .nexus-notes-grid { column-count: 1; }
+.nexus-notes-featured-card {
+  background: var(--nx-bg-card, #fff);
+  border: 1px solid var(--nx-border, #ebebeb);
+  border-left: 3px solid var(--nx-text-muted);
+  padding: 22px 24px 18px;
+  position: relative;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.nexus-notes-featured-card:hover {
+  border-color: #ddd;
+  border-left-color: var(--nx-text-muted);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+}
+
+.nexus-notes-featured-card-toprow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.nexus-notes-featured-card-toprow .nexus-notes-featured-card-tag {
+  margin-bottom: 0;
+}
+
+.nexus-notes-featured-card-tag {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--nx-text-muted);
+  margin-bottom: 10px;
+}
+
+.nexus-notes-featured-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--nx-text);
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+  line-height: 1.4;
+}
+
+.nexus-notes-featured-card-body {
+  font-size: 13px;
+  color: var(--nx-text-muted);
+  line-height: 1.65;
+  margin-bottom: 14px;
+  white-space: pre-wrap;
+}
+
+.nexus-notes-featured-card-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding-top: 14px;
+  border-top: 1px solid var(--nx-border, #ebebeb);
+}
+
+.nexus-notes-featured-metric { text-align: left; }
+
+.nexus-notes-featured-metric-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--nx-text);
+  letter-spacing: -0.01em;
+}
+
+.nexus-notes-featured-metric-label {
+  font-size: 10px;
+  color: var(--nx-text-muted);
+  letter-spacing: 0.02em;
+  margin-top: 2px;
+}
+
+.nexus-notes-featured-card-arrow {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  color: var(--nx-text-muted);
+  font-size: 16px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.nexus-notes-featured-card:hover .nexus-notes-featured-card-arrow {
+  opacity: 1;
+}
+
+.nexus-notes-pinned-rest {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+/* ---------- COUNTER ROW ---------- */
+.nexus-notes-counter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--nx-border, #ebebeb);
+}
+
+.nexus-notes-counter {
+  font-size: 14px;
+  color: var(--nx-text-muted);
+  letter-spacing: 0.01em;
+}
+
+.nexus-notes-counter strong {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--nx-text);
+  letter-spacing: -0.03em;
+  margin-right: 6px;
+}
+
+/* ---------- CARD ARROW ---------- */
+.nexus-note-card-arrow {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  color: var(--nx-text-muted);
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.15s;
+  pointer-events: none;
+}
+
+.nexus-note-card:hover .nexus-note-card-arrow {
+  opacity: 1;
+}
+
+.nexus-notes-masonry {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 16px;
+}
+
+.nexus-notes-column {
+  flex: 0 0 min(300px, 100%);
+  width: min(300px, 100%);
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .nexus-notes-empty {
@@ -1494,21 +1749,22 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  grid-column: 1 / -1;
+  min-height: 320px;
+  justify-content: center;
 }
 
 .nexus-notes-empty::before {
   content: "";
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--nx-accent) 12%, transparent), color-mix(in srgb, var(--nx-accent-light) 8%, transparent));
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpolyline points='14 2 14 8 20 8'/%3E%3Cline x1='9' y1='13' x2='15' y2='13'/%3E%3Cline x1='9' y1='17' x2='13' y2='17'/%3E%3C/svg%3E");
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpolyline points='14 2 14 8 20 8'/%3E%3Cline x1='9' y1='13' x2='15' y2='13'/%3E%3Cline x1='9' y1='17' x2='13' y2='17'/%3E%3C/svg%3E");
+  background: rgba(0,0,0,0.06);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpolyline points='14 2 14 8 20 8'/%3E%3Cline x1='9' y1='13' x2='15' y2='13'/%3E%3Cline x1='9' y1='17' x2='13' y2='17'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpolyline points='14 2 14 8 20 8'/%3E%3Cline x1='9' y1='13' x2='15' y2='13'/%3E%3Cline x1='9' y1='17' x2='13' y2='17'/%3E%3C/svg%3E");
   mask-repeat: no-repeat;
   -webkit-mask-repeat: no-repeat;
   mask-size: contain;
   -webkit-mask-size: contain;
-  color: var(--nx-accent);
+  color: var(--nx-text-muted);
   opacity: 0.7;
   margin-bottom: 4px;
   animation: nexus-empty-float 4s ease-in-out infinite;
@@ -1535,38 +1791,29 @@
   line-height: 1.5;
 }
 
+/* ---------- NOTE CARD — portfolio ---------- */
 .nexus-note-card {
-  break-inside: avoid;
-  display: inline-block;
+  display: block;
   width: 100%;
-  background:
-    linear-gradient(180deg, var(--nx-bg-card) 0%, color-mix(in srgb, var(--nx-bg-card) 96%, var(--nx-bg)) 100%);
-  border: 1px solid var(--nx-border);
-  border-radius: 14px;
+  --note-ink: var(--nx-text, #1a1a1a);
+  --note-ink-muted: var(--nx-text-muted, #8a8477);
+  background: var(--nx-bg-card, #ffffff);
+  border: 1px solid var(--nx-border, #ebebeb);
   padding: 0;
-  margin-bottom: 14px;
   cursor: pointer;
   position: relative;
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
-  animation: nexus-card-enter 0.32s ease-out backwards;
-  overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  overflow: visible;
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+  animation: nexus-card-enter 0.22s ease-out backwards;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.02);
 }
 
-.nexus-note-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--nx-accent) 0%, var(--nx-accent-light) 100%);
-  opacity: 0;
-  transition: opacity 0.22s ease;
-}
+.nexus-note-card::before { display: none; }
+.nexus-note-card::after { display: none; }
 
-.nexus-note-card:hover::before {
-  opacity: 0.6;
+.nexus-note-card--pinned-layout {
+  flex: 0 0 min(320px, calc(100vw - 72px));
+  max-width: 320px;
 }
 
 @keyframes nexus-card-enter {
@@ -1575,86 +1822,83 @@
 }
 
 .nexus-note-card:hover {
-  border-color: color-mix(in srgb, var(--nx-accent) 40%, var(--nx-border));
-  box-shadow: 0 6px 14px rgba(0,0,0,0.04), 0 12px 28px color-mix(in srgb, var(--nx-accent) 10%, transparent);
-  transform: translateY(-3px);
+  transform: translateY(-2px);
+  border-color: #d4d4d4;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.07), 0 2px 6px rgba(0,0,0,0.04);
 }
 
 .nexus-note-card--pinned {
-  background:
-    linear-gradient(135deg, color-mix(in srgb, var(--nx-accent) 5%, var(--nx-bg-card)) 0%, var(--nx-bg-card) 60%);
-  border-color: color-mix(in srgb, var(--nx-accent) 18%, var(--nx-border));
-}
-
-.nexus-note-card--pinned::before {
-  opacity: 1;
+  border-left: 3px solid var(--nx-text-muted);
 }
 
 .nexus-note-card--pinned:hover {
-  border-color: color-mix(in srgb, var(--nx-accent) 45%, var(--nx-border));
+  border-left-color: var(--nx-text-muted);
 }
 
 .nexus-note-card-content {
-  padding: 14px 14px 10px;
+  position: relative;
+  z-index: 1;
+  padding: 20px 22px 16px;
+}
+
+.nexus-note-card-toplabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--nx-text-muted);
+  margin-bottom: 10px;
 }
 
 .nexus-note-card-header {
   display: flex;
   align-items: flex-start;
   gap: 7px;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
 }
 
-.nexus-note-card-pin {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--nx-accent) 14%, transparent);
-  color: var(--nx-accent);
-  font-size: 0.65em;
-  filter: drop-shadow(0 1px 1px color-mix(in srgb, var(--nx-accent) 25%, transparent));
+.nexus-note-card-title-wrap {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
 }
 
-.nexus-note-card-pin::before {
-  content: "";
-  width: 9px;
-  height: 9px;
-  background: currentColor;
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M16 12V4h1V2H7v2h1v8l-2 2v2h6v6h2v-6h6v-2l-2-2z'/%3E%3C/svg%3E");
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='currentColor'%3E%3Cpath d='M16 12V4h1V2H7v2h1v8l-2 2v2h6v6h2v-6h6v-2l-2-2z'/%3E%3C/svg%3E");
-  mask-repeat: no-repeat;
-  -webkit-mask-repeat: no-repeat;
-  mask-size: contain;
-  -webkit-mask-size: contain;
-}
+.nexus-note-card-pin { display: none; }
+.nexus-note-card-pin::before { display: none; }
 
 .nexus-note-card-title {
   margin: 0;
-  flex: 1;
-  font-size: 0.98em;
-  font-weight: 600;
-  color: var(--nx-text);
+  font-size: 1em;
+  font-weight: 700;
+  color: var(--note-ink);
   word-break: break-word;
   min-width: 0;
   line-height: 1.35;
-  letter-spacing: -0.005em;
+  letter-spacing: -0.015em;
+  font-family: inherit;
+  transition: color 0.15s ease;
 }
+
+.nexus-note-card-title--generated {
+  font-weight: 500;
+  font-style: italic;
+  color: var(--note-ink-muted);
+}
+
+.nexus-note-card-subtitle { display: none; }
 
 .nexus-note-card-menu {
   background: transparent;
   border: none;
-  color: var(--nx-text-muted);
+  color: var(--note-ink-muted);
   cursor: pointer;
   font-size: 1.15em;
-  padding: 0 4px;
+  padding: 0 2px;
   line-height: 1;
   opacity: 0;
-  transition: opacity 0.18s, color 0.18s, background 0.18s;
-  border-radius: 6px;
+  transition: opacity 0.15s, color 0.15s;
   width: 22px;
   height: 22px;
   display: flex;
@@ -1663,24 +1907,23 @@
   flex-shrink: 0;
 }
 
-.nexus-note-card:hover .nexus-note-card-menu {
-  opacity: 0.7;
+.nexus-note-card:hover .nexus-note-card-menu,
+.nexus-notes-featured-card:hover .nexus-note-card-menu {
+  opacity: 1;
 }
 
 .nexus-note-card-menu:hover {
   opacity: 1 !important;
-  color: var(--nx-text);
-  background: color-mix(in srgb, var(--nx-text-muted) 10%, transparent);
+  color: var(--note-ink);
 }
 
 .nexus-note-card-menu-popup {
   position: absolute;
   top: 34px;
   right: 10px;
-  background: var(--nx-bg-card);
-  border: 1px solid var(--nx-border);
-  border-radius: 10px;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.12), 0 2px 6px rgba(0,0,0,0.04);
+  background: var(--nx-bg-card, #fff);
+  border: 1px solid var(--nx-border, #ebebeb);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08), 0 2px 6px rgba(0,0,0,0.04);
   padding: 5px;
   display: flex;
   flex-direction: column;
@@ -1691,7 +1934,7 @@
 }
 
 @keyframes nexus-menu-pop {
-  from { opacity: 0; transform: scale(0.94) translateY(-4px); }
+  from { opacity: 0; transform: scale(0.96) translateY(-4px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
@@ -1702,10 +1945,9 @@
 .nexus-note-card-menu-popup button {
   background: none;
   border: none;
-  color: var(--nx-text);
+  color: var(--note-ink);
   padding: 7px 11px;
   text-align: left;
-  border-radius: 7px;
   cursor: pointer;
   font-size: 0.85em;
   font-weight: 500;
@@ -1716,8 +1958,8 @@
 }
 
 .nexus-note-card-menu-popup button:hover {
-  background: color-mix(in srgb, var(--nx-accent) 8%, transparent);
-  color: var(--nx-accent);
+  background: rgba(0,0,0,0.04);
+  color: var(--note-ink);
 }
 
 .nexus-note-card-menu-delete {
@@ -1725,122 +1967,467 @@
 }
 
 .nexus-note-card-menu-delete:hover {
-  background: color-mix(in srgb, var(--nx-danger, #ef4444) 10%, transparent) !important;
+  background: color-mix(in srgb, var(--nx-danger, #ef4444) 8%, transparent) !important;
   color: var(--nx-danger, #ef4444) !important;
 }
 
 .nexus-note-card-body {
-  font-size: 0.86em;
-  color: var(--nx-text-muted);
-  line-height: 1.6;
-  margin-bottom: 10px;
+  font-size: 0.85em;
+  color: var(--note-ink-muted);
+  line-height: 1.7;
+  margin-bottom: 14px;
   word-break: break-word;
   white-space: pre-wrap;
-  display: -webkit-box;
-  -webkit-line-clamp: 12;
-  -webkit-box-orient: vertical;
+  font-family: inherit;
+  transition: color 0.15s ease;
+}
+
+.nexus-note-card-body--collapsed {
+  max-height: 200px;
   overflow: hidden;
+  position: relative;
+}
+
+.nexus-note-card-body--collapsed::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 48px;
+  background: linear-gradient(180deg, transparent 0%, var(--nx-bg-card, #fff) 100%);
+  pointer-events: none;
+}
+
+.nexus-note-card-expand {
+  align-self: flex-start;
+  border: none;
+  background: transparent;
+  color: var(--note-ink-muted);
+  font-size: 0.76em;
+  font-weight: 500;
+  padding: 0;
+  margin: -2px 0 14px;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.nexus-note-card-expand:hover {
+  text-decoration: underline;
 }
 
 .nexus-note-card-tags {
   display: flex;
-  gap: 5px;
+  gap: 4px;
   flex-wrap: wrap;
-  margin-bottom: 8px;
+  margin-bottom: 14px;
 }
 
 .nexus-note-card-tag {
-  font-size: 0.72em;
+  font-size: 0.7em;
   font-weight: 500;
-  background: color-mix(in srgb, var(--nx-accent) 8%, transparent);
-  color: var(--nx-accent);
-  border-radius: 5px;
-  padding: 2px 7px;
+  background: rgba(0,0,0,0.05);
+  color: var(--note-ink-muted);
+  border: none;
+  padding: 2px 6px;
   letter-spacing: 0.01em;
 }
 
 .nexus-note-card-footer {
   display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding-top: 4px;
-  border-top: 1px dashed color-mix(in srgb, var(--nx-border) 70%, transparent);
+  justify-content: center;
+  align-items: flex-end;
+  padding-top: 0;
+  border-top: none;
+}
+
+.nexus-note-card-footer .nexus-note-card-metric { text-align: center; }
+
+.nexus-note-card-metric-value {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--note-ink);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+
+.nexus-note-card-metric-label {
+  font-size: 10px;
+  color: var(--note-ink-muted);
+  letter-spacing: 0.02em;
+  margin-top: 1px;
 }
 
 .nexus-note-card-date {
-  font-size: 0.72em;
-  color: var(--nx-text-muted);
+  font-size: 0.7em;
+  color: var(--note-ink-muted);
   opacity: 0.7;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
+  flex-shrink: 0;
 }
 
-.nexus-notes-add-fab {
-  position: absolute;
-  bottom: 28px;
-  right: 28px;
-  width: 54px;
-  height: 54px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--nx-accent) 0%, var(--nx-accent-light) 100%);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--nx-accent) 35%, transparent), 0 2px 4px rgba(0,0,0,0.1);
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
-  z-index: 20;
-  user-select: none;
-  border: none;
-  animation: nexus-fab-pulse 3s ease-in-out infinite;
+/* === Inline edit mode === */
+.nexus-note-card--editing {
+  cursor: default;
+  border-color: var(--nx-text-muted);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+  z-index: 5;
 }
 
-.nexus-notes-add-fab::before {
-  content: "";
-  width: 22px;
-  height: 22px;
-  background: currentColor;
-  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
-  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='12' y1='5' x2='12' y2='19'/%3E%3Cline x1='5' y1='12' x2='19' y2='12'/%3E%3C/svg%3E");
-  mask-repeat: no-repeat;
-  -webkit-mask-repeat: no-repeat;
-  mask-size: contain;
-  -webkit-mask-size: contain;
-  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+.nexus-note-card--editing:hover {
+  transform: none;
 }
 
-.nexus-notes-add-fab::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.25);
-  opacity: 0;
-  transition: opacity 0.3s;
-  pointer-events: none;
+.nexus-note-card-title-input {
+  width: 100%;
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1.5px solid var(--nx-border, #ebebeb) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: var(--note-ink);
+  font-size: 0.95em;
+  font-weight: 600;
+  font-family: inherit;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  padding: 0 0 4px;
+  resize: none;
+  overflow: hidden;
 }
 
-@keyframes nexus-fab-pulse {
-  0%, 100% { box-shadow: 0 6px 18px color-mix(in srgb, var(--nx-accent) 35%, transparent), 0 2px 4px rgba(0,0,0,0.1); }
-  50% { box-shadow: 0 6px 18px color-mix(in srgb, var(--nx-accent) 35%, transparent), 0 2px 4px rgba(0,0,0,0.1), 0 0 0 10px color-mix(in srgb, var(--nx-accent) 0%, transparent); }
+.nexus-note-card-title-input:focus {
+  outline: none !important;
+  border-bottom-color: var(--nx-text) !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
-.nexus-notes-add-fab:hover {
-  transform: scale(1.08);
-  box-shadow: 0 10px 26px color-mix(in srgb, var(--nx-accent) 45%, transparent), 0 4px 8px rgba(0,0,0,0.12);
+.nexus-note-card-title-input::placeholder {
+  color: var(--note-ink-muted);
+  opacity: 0.5;
+  font-style: italic;
 }
 
-.nexus-notes-add-fab:hover::before {
-  transform: rotate(90deg);
+.nexus-note-card-body-input {
+  width: 100%;
+  min-height: 48px;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: var(--note-ink-muted);
+  font-size: 0.84em;
+  font-family: inherit;
+  line-height: 1.65;
+  padding: 0;
+  margin-bottom: 10px;
+  resize: none;
+  overflow: hidden;
+  word-break: break-word;
+  white-space: pre-wrap;
 }
 
-.nexus-notes-add-fab:hover::after {
-  opacity: 1;
+.nexus-note-card-body-input:focus {
+  outline: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
-.nexus-notes-add-fab:active {
-  transform: scale(0.96);
+.nexus-note-card-body-input::placeholder {
+  color: var(--note-ink-muted);
+  opacity: 0.5;
+}
+
+.nexus-note-card-edit-hint {
+  font-size: 0.68em;
+  color: var(--note-ink-muted);
+  opacity: 0.5;
+  letter-spacing: 0.02em;
+}
+
+.nexus-note-card-tags--live .nexus-note-card-tag {
+  animation: nexus-tag-appear 0.15s ease-out;
+}
+
+@keyframes nexus-tag-appear {
+  from { opacity: 0; transform: scale(0.85); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (max-width: 900px) {
+  .nexus-notes-layout {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .nexus-notes-body {
+    padding-right: 16px;
+  }
+
+  .nexus-notes-sidepanel {
+    position: static;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .nexus-notes-sidepanel-group {
+    position: static;
+    flex-direction: row;
+    width: auto;
+  }
+
+  .nexus-notes-sidebutton {
+    flex: 0 0 22px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .nexus-notes-featured {
+    grid-template-columns: 1fr;
+  }
+
+  .nexus-notes-board-title-main,
+  .nexus-notes-board-title-accent {
+    font-size: 36px;
+  }
+}
+
+@media (max-width: 700px) {
+  .nexus-notes-flow {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .nexus-notes-toolbar {
+    padding: 10px 12px;
+  }
+
+  .nexus-notes-masonry {
+    gap: 12px;
+  }
+
+  .nexus-notes-column {
+    gap: 12px;
+  }
+}
+
+/* ===== iPad & Tablet Adaptation ===== */
+
+/* Tablet breakpoint: 768px - 1024px (iPad portrait/landscape) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Two-column layout with adjusted widths */
+  .nexus-body {
+    gap: 12px;
+  }
+  
+  .nexus-left-sidebar {
+    width: 28%;
+    min-width: 200px;
+    max-width: 280px;
+  }
+  
+  .nexus-main {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  /* Larger touch targets for buttons */
+  .nexus-tab-btn {
+    width: 48px;
+    height: 44px;
+  }
+  
+  .nexus-todo-checkbox {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .nexus-quick-link-delete,
+  .nexus-sidebar-countdown-del {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  /* EPUB reader navigation buttons larger for touch */
+  .nexus-epub-nav {
+    font-size: 56px;
+    padding: 28px 16px;
+  }
+  
+  .nexus-epub-back-btn {
+    padding: 6px 14px;
+    font-size: 0.9em;
+  }
+  
+  .nexus-epub-font-group input[type="range"] {
+    width: 100px;
+    height: 28px;
+  }
+  
+  /* Notes grid: 2 columns on iPad */
+  .nexus-notes-masonry {
+    gap: 14px;
+  }
+  
+  .nexus-notes-column {
+    flex: 0 0 min(320px, 100%);
+    width: min(320px, 100%);
+    gap: 14px;
+  }
+  
+  /* Bookshelf grid: larger cards */
+  .nexus-bookshelf-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+  }
+  
+  /* Heatmap cells slightly larger */
+  .nexus-heatmap-td .nexus-heatmap-cell {
+    max-width: 28px;
+  }
+  
+  /* Modal wider for tablet */
+  .nexus-note-editor {
+    min-width: 560px;
+    max-width: 680px;
+  }
+}
+
+/* iPad landscape: wider layout */
+@media (min-width: 1024px) and (max-width: 1366px) and (orientation: landscape) {
+  .nexus-body {
+    gap: 16px;
+  }
+  
+  .nexus-left-sidebar {
+    width: 24%;
+    min-width: 220px;
+    max-width: 320px;
+  }
+  
+  /* Notes grid: 3 columns in landscape */
+  .nexus-notes-column {
+    flex: 0 0 min(280px, 100%);
+    width: min(280px, 100%);
+  }
+  
+  /* EPUB content area taller */
+  .nexus-epub-content-area {
+    min-height: 500px;
+  }
+}
+
+/* iPad portrait: single column main */
+@media (min-width: 768px) and (max-width: 1024px) and (orientation: portrait) {
+  /* Stack sidebar below main content on portrait */
+  .nexus-body {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .nexus-left-sidebar {
+    width: 100%;
+    max-width: none;
+    order: 2;
+  }
+  
+  .nexus-main {
+    order: 1;
+  }
+  
+  /* Single column notes */
+  .nexus-notes-column {
+    flex: 0 0 100%;
+    width: 100%;
+  }
+  
+  /* EPUB reader full width */
+  .nexus-epub-content-area {
+    min-height: 600px;
+  }
+}
+
+/* Touch device optimizations (applies to all touch-enabled devices) */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects that don't work well on touch */
+  .nexus-note-card:hover {
+    transform: none;
+  }
+  
+  .nexus-book-card:hover {
+    transform: none;
+  }
+  
+  /* Always show action buttons on touch devices */
+  .nexus-quick-link-delete {
+    display: flex;
+  }
+  
+  .nexus-sidebar-countdown-del {
+    opacity: 1;
+  }
+  
+  .nexus-note-card-menu {
+    opacity: 1;
+  }
+  
+  .nexus-note-card-arrow,
+  .nexus-notes-featured-card-arrow {
+    opacity: 1;
+  }
+  
+  /* Side panel buttons always visible on touch - fix pointer-events issue */
+  .nexus-notes-sidepanel {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  
+  .nexus-notes-sidepanel-group {
+    pointer-events: auto !important;
+  }
+  
+  .nexus-notes-sidebutton {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.06) !important;
+  }
+  
+  /* Larger minimum touch target: 44x44px (Apple HIG) */
+  button,
+  [role="button"],
+  input[type="checkbox"],
+  input[type="range"],
+  .nexus-heatmap-cell,
+  .nexus-tab-btn,
+  .nexus-quick-link-item,
+  .nexus-recent-item,
+  .nexus-todo-item {
+    min-height: 44px;
+  }
+  
+  /* Increase spacing for better touch accuracy */
+  .nexus-todo-item {
+    padding: 8px 10px;
+  }
+  
+  .nexus-quick-link-item,
+  .nexus-recent-item {
+    padding: 10px 14px;
+  }
+  
+  /* EPUB swipe hint - show navigation arrows more prominently */
+  .nexus-epub-nav {
+    opacity: 0.5;
+  }
 }
 
 /* ===== NOTE EDITOR MODAL ===== */
@@ -1875,7 +2462,6 @@
   width: 100%;
   background: color-mix(in srgb, var(--nx-bg) 50%, transparent);
   border: 1px solid var(--nx-border);
-  border-radius: 10px;
   padding: 10px 12px;
   color: var(--nx-text);
   font-size: 0.92em;
@@ -1900,9 +2486,9 @@
 .nexus-note-editor-tags:focus,
 .nexus-note-editor-body:focus {
   outline: none;
-  border-color: var(--nx-accent);
+  border-color: var(--nx-text-muted);
   background: var(--nx-bg-card);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--nx-accent) 12%, transparent);
+  box-shadow: none;
 }
 
 .nexus-note-editor-body {
@@ -1922,7 +2508,6 @@
 
 .nexus-note-editor-buttons button {
   padding: 8px 18px;
-  border-radius: 9px;
   font-weight: 500;
   font-size: 0.9em;
   cursor: pointer;
@@ -1937,13 +2522,15 @@
 }
 
 .nexus-note-editor-buttons button.mod-cta {
-  background: linear-gradient(135deg, var(--nx-accent) 0%, var(--nx-accent-light) 100%);
+  background: var(--nx-text);
   color: #fff;
+  font-weight: 600;
   border-color: transparent;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--nx-accent) 25%, transparent);
+  box-shadow: none;
 }
 
 .nexus-note-editor-buttons button.mod-cta:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px color-mix(in srgb, var(--nx-accent) 35%, transparent);
+  transform: none;
+  box-shadow: none;
+  opacity: 0.85;
 }

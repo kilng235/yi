@@ -1,5 +1,6 @@
 import { App, Modal } from "obsidian";
 import { Note } from "../types";
+import { renderTemplate, todayString } from "./note-template";
 
 export class NoteEditorModal extends Modal {
   private mode: "create" | "edit";
@@ -36,6 +37,13 @@ export class NoteEditorModal extends Modal {
       cls: "nexus-note-editor-title",
     });
     this.titleInput.value = this.note?.title || "";
+    if (this.mode === "create") {
+      const settings = (this.app as any).plugins?.plugins?.hubstack?.settings;
+      if (settings?.noteAutoTitle) {
+        const { date } = todayString();
+        this.titleInput.value = date;
+      }
+    }
 
     this.bodyInput = contentEl.createEl("textarea", {
       placeholder: "写点什么...",
@@ -43,6 +51,17 @@ export class NoteEditorModal extends Modal {
       attr: { rows: "8" },
     });
     this.bodyInput.value = this.note?.body || "";
+    if (this.mode === "create") {
+      const settings = (this.app as any).plugins?.plugins?.hubstack?.settings;
+      if (settings?.noteTemplate) {
+        const { date, time } = todayString();
+        this.bodyInput.value = renderTemplate(settings.noteTemplate, {
+          date,
+          time,
+          title: this.titleInput.value,
+        });
+      }
+    }
 
     this.tagsInput = contentEl.createEl("input", {
       type: "text",
@@ -71,7 +90,15 @@ export class NoteEditorModal extends Modal {
       if (e.key === "Enter") { e.preventDefault(); this.submit(); }
     });
 
-    setTimeout(() => this.titleInput.focus(), 50);
+    setTimeout(() => {
+      if (this.mode === "edit") {
+        this.bodyInput.focus();
+        const len = this.bodyInput.value.length;
+        this.bodyInput.setSelectionRange(len, len);
+      } else {
+        this.titleInput.focus();
+      }
+    }, 50);
   }
 
   private submit() {

@@ -10,6 +10,7 @@ export class NotesSync {
   private loading = false;
   private eventRef: any = null;
   private callbacks: Array<(notes: Note[]) => void | Promise<void>> = [];
+  private suppressCallbacks = false;
 
   constructor(app: App) {
     this.app = app;
@@ -141,6 +142,15 @@ export class NotesSync {
     await this.load();
   }
 
+  async updateNoteSilent(id: string, patch: Partial<Pick<Note, "title" | "body" | "tags">>): Promise<void> {
+    this.suppressCallbacks = true;
+    try {
+      await this.updateNote(id, patch);
+    } finally {
+      this.suppressCallbacks = false;
+    }
+  }
+
   async deleteNote(id: string): Promise<void> {
     const note = this.notes.find((n) => n.id === id);
     if (!note) return;
@@ -189,6 +199,7 @@ export class NotesSync {
   }
 
   private async notifyCallbacks() {
+    if (this.suppressCallbacks) return;
     for (const cb of this.callbacks) {
       try { await cb(this.notes); } catch (e) { console.error(e); }
     }
@@ -263,4 +274,15 @@ function parseFrontmatter(raw: string): Record<string, any> {
 
 function stripFrontmatter(raw: string): string {
   return raw.replace(/^---\n[\s\S]*?\n---\n?/, "").trim();
+}
+
+export function extractTagsFromBody(body: string): { cleanBody: string; tags: string[] } {
+  const tagPattern = /#([\p{L}\p{N}_-]+)/gu;
+  const tags: string[] = [];
+  let match: RegExpExecArray | null;
+  while ((match = tagPattern.exec(body)) !== null) {
+    if (!tags.includes(match[1])) tags.push(match[1]);
+  }
+  const cleanBody = body.replace(tagPattern, "").replace(/\n{3,}/g, "\n\n").trimEnd();
+  return { cleanBody, tags };
 }

@@ -48,11 +48,6 @@ export async function renderTodo(
   el.empty();
   el.addClass("nexus-todo");
 
-  const header = el.createDiv({ cls: "nexus-todo-header" });
-  const headerMain = header.createDiv({ cls: "nexus-todo-header-main" });
-  headerMain.createEl("h3", { text: "待办" });
-
-  // Collect task cards from all columns (position-based, not name-based)
   const taskCards = data.columns
     .flatMap((col) =>
       col.cards
@@ -80,12 +75,12 @@ export async function renderTodo(
   const archivedCount = await countArchivedThisMonth(app, monthKey);
   const completedCount = todayCount + archivedCount;
 
-  const statsEl = headerMain.createDiv({ cls: "nexus-todo-stats" });
-  statsEl.createEl("span", {
+  const header = el.createDiv({ cls: "nexus-todo-header" });
+  header.createDiv({ cls: "nexus-todo-stats" }).createEl("span", {
     cls: "nexus-todo-stat nexus-todo-stat--pending",
     text: `待办 ${pendingCount}`,
   });
-  statsEl.createEl("span", {
+  header.createSpan({
     cls: "nexus-todo-stat nexus-todo-stat--completed",
     text: `本月完成 ${completedCount}`,
   });

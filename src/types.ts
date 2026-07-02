@@ -27,6 +27,8 @@ export interface HubstackSettings {
   deepseekApiKey: string;
   countdowns: CountdownItem[];
   activeTab: "dashboard" | "notes";
+  noteTemplate: string;
+  noteAutoTitle: boolean;
 }
 
 export const DEFAULT_SETTINGS: HubstackSettings = {
@@ -53,6 +55,8 @@ export const DEFAULT_SETTINGS: HubstackSettings = {
   deepseekApiKey: "",
   countdowns: [],
   activeTab: "dashboard",
+  noteTemplate: "## {{date}}",
+  noteAutoTitle: true,
 };
 
 // ===== Heatmap =====

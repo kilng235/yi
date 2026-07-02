@@ -6,6 +6,21 @@ import { loadExternalConfig, saveExternalConfig, mergeSettings } from "./config-
 import { loadActivityLog, saveActivityLog } from "./activity-log";
 
 const LEGACY_PLUGIN_DATA_PATH = ".obsidian/plugins/nexus/data.json";
+const LEGACY_NOTE_TEMPLATE = `## {{date}}
+
+### 今日要点
+- 
+
+### 心情
+
+
+### 想法
+- 
+
+### 待办
+- [ ] 
+`;
+const MINIMAL_NOTE_TEMPLATE = "## {{date}}";
 
 export default class HubstackPlugin extends Plugin {
   settings: HubstackSettings;
@@ -13,6 +28,7 @@ export default class HubstackPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
     await this.migrateCountdownSettings();
+    await this.migrateLegacyNoteTemplate();
     await this.backfillActivityFromVault();
 
     this.registerView(HUBSTACK_VIEW_TYPE, (leaf) => new HubstackView(leaf, this));
@@ -44,6 +60,12 @@ export default class HubstackPlugin extends Plugin {
       delete raw.countdownTargetDate;
       await this.saveSettings();
     }
+  }
+
+  private async migrateLegacyNoteTemplate() {
+    if (this.settings.noteTemplate !== LEGACY_NOTE_TEMPLATE) return;
+    this.settings.noteTemplate = MINIMAL_NOTE_TEMPLATE;
+    await this.saveSettings();
   }
 
   async loadSettings() {
@@ -192,5 +214,29 @@ class HubstackSettingTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           })
       );
+
+    new Setting(containerEl)
+      .setName("小记自动用日期做标题")
+      .setDesc("新建小记时自动填入今天日期作为标题")
+      .addToggle((toggle) =>
+        toggle
+          .setValue(this.plugin.settings.noteAutoTitle)
+          .onChange(async (value) => {
+            this.plugin.settings.noteAutoTitle = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    const templateSetting = new Setting(containerEl)
+      .setName("小记模板")
+      .setDesc("新建小记时自动填入的正文内容，支持 {{date}} {{time}} {{title}} 变量");
+    const templateArea = templateSetting.controlEl.createEl("textarea", {
+      attr: { rows: "10", style: "width: 100%; font-family: var(--font-monospace); resize: vertical;" },
+    });
+    templateArea.value = this.plugin.settings.noteTemplate;
+    templateArea.addEventListener("change", async () => {
+      this.plugin.settings.noteTemplate = templateArea.value;
+      await this.plugin.saveSettings();
+    });
   }
 }
