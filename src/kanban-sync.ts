@@ -111,13 +111,13 @@ export class KanbanSync {
     if (!this.data) return;
     const cols = this.data.columns;
     let moved: KanbanCard | null = null;
+    let sourceCol: KanbanColumn | null = null;
     let sourceIndex = -1;
-    let sourceColumnName = "";
     for (const col of cols) {
       const idx = col.cards.findIndex((c) => c.id === cardId);
       if (idx !== -1) {
         sourceIndex = idx;
-        sourceColumnName = col.name;
+        sourceCol = col;
         moved = col.cards.splice(idx, 1)[0];
         break;
       }
@@ -125,7 +125,8 @@ export class KanbanSync {
     if (!moved) return;
     const target = cols.find((c) => c.name === toColumn);
     if (!target) {
-      cols[sourceIndex >= 0 ? sourceIndex : 0].cards.splice(sourceIndex >= 0 ? sourceIndex : 0, 0, moved);
+      // Target column not found — restore card to its original position
+      if (sourceCol) sourceCol.cards.splice(sourceIndex, 0, moved);
       return;
     }
     // Auto-mark completed when moved to last column
@@ -135,7 +136,7 @@ export class KanbanSync {
       moved.completedAt = todayStr();
       for (const task of moved.tasks) task.checked = true;
     }
-    const adjustedIndex = (sourceColumnName === toColumn && sourceIndex < toIndex)
+    const adjustedIndex = (sourceCol && sourceCol.name === toColumn && sourceIndex < toIndex)
       ? toIndex - 1 : toIndex;
     target.cards.splice(adjustedIndex, 0, moved);
     if (isLastColumn && this.onActivity) this.onActivity("cardComplete");

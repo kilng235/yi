@@ -105,7 +105,7 @@ export class HubstackView extends ItemView {
   }
 
   runCleanup() {
-    const oldBanner = this.contentEl.querySelector(".nexus-banner") as HTMLElement;
+    const oldBanner = this.contentEl.querySelector(".hubstack-banner") as HTMLElement;
     if (oldBanner) cleanupBanner(oldBanner);
     for (const fn of this.cleanupFns) fn();
     this.cleanupFns = [];
@@ -122,19 +122,19 @@ export class HubstackView extends ItemView {
     this.runCleanup();
     const container = this.contentEl;
     container.empty();
-    container.addClass("nexus-root");
+    container.addClass("hubstack-root");
     container.setAttribute("data-theme", this.plugin.settings.stylePreset);
 
-    const bannerEl = container.createDiv({ cls: "nexus-banner" });
+    const bannerEl = container.createDiv({ cls: "hubstack-banner" });
     if (this.plugin.settings.bannerHeight) {
       bannerEl.style.minHeight = `${this.plugin.settings.bannerHeight}px`;
     }
-    renderBanner(bannerEl, this.plugin.settings, this.app);
+    renderBanner(bannerEl, this.plugin.settings, this.app, () => this.plugin.saveSettings());
 
-    const tabBar = container.createDiv({ cls: "nexus-tab-bar-wrap" });
+    const tabBar = container.createDiv({ cls: "hubstack-tab-bar-wrap" });
     renderTabBar(tabBar, this.plugin.settings.activeTab, (t) => this.setActiveTab(t));
 
-    const tabContent = container.createDiv({ cls: "nexus-tab-content" });
+    const tabContent = container.createDiv({ cls: "hubstack-tab-content" });
 
     if (this.plugin.settings.activeTab === "notes") {
       renderNotesFlow(
@@ -148,34 +148,34 @@ export class HubstackView extends ItemView {
       return;
     }
 
-    const body = tabContent.createDiv({ cls: "nexus-body" });
+    const body = tabContent.createDiv({ cls: "hubstack-body" });
 
-    const sidebar = body.createDiv({ cls: "nexus-left-sidebar" });
+    const sidebar = body.createDiv({ cls: "hubstack-left-sidebar" });
     renderSidebar(sidebar, this.app, this.plugin, this.cleanupFns);
 
-    const main = body.createDiv({ cls: "nexus-main" });
+    const main = body.createDiv({ cls: "hubstack-main" });
 
-    const todoSection = main.createDiv({ cls: "nexus-section" });
-    const todoHeader = todoSection.createDiv({ cls: "nexus-section-header" });
-    todoHeader.createDiv({ cls: "nexus-section-dot nexus-section-dot--red" });
-    todoHeader.createEl("span", { text: "待办事项", cls: "nexus-section-title" });
-    const todoBody = todoSection.createDiv({ cls: "nexus-section-body" });
+    const todoSection = main.createDiv({ cls: "hubstack-section" });
+    const todoHeader = todoSection.createDiv({ cls: "hubstack-section-header" });
+    todoHeader.createDiv({ cls: "hubstack-section-dot hubstack-section-dot--red" });
+    todoHeader.createEl("span", { text: "待办事项", cls: "hubstack-section-title" });
+    const todoBody = todoSection.createDiv({ cls: "hubstack-section-body" });
     if (this.kanbanData) {
       await renderTodo(todoBody, this.kanbanData, this.kanbanSync, this.app, this.activityLog, this.cleanupFns);
     }
 
-    const heatmapSection = main.createDiv({ cls: "nexus-section" });
-    const heatmapHeader = heatmapSection.createDiv({ cls: "nexus-section-header" });
-    heatmapHeader.createDiv({ cls: "nexus-section-dot nexus-section-dot--yellow" });
-    heatmapHeader.createEl("span", { text: "活跃度", cls: "nexus-section-title" });
-    const heatmapBody = heatmapSection.createDiv({ cls: "nexus-section-body" });
+    const heatmapSection = main.createDiv({ cls: "hubstack-section" });
+    const heatmapHeader = heatmapSection.createDiv({ cls: "hubstack-section-header" });
+    heatmapHeader.createDiv({ cls: "hubstack-section-dot hubstack-section-dot--yellow" });
+    heatmapHeader.createEl("span", { text: "活跃度", cls: "hubstack-section-title" });
+    const heatmapBody = heatmapSection.createDiv({ cls: "hubstack-section-body" });
     renderHeatmap(heatmapBody, this.plugin.settings, this.activityLog);
 
-    const bookSection = main.createDiv({ cls: "nexus-section" });
-    const bookHeader = bookSection.createDiv({ cls: "nexus-section-header" });
-    bookHeader.createDiv({ cls: "nexus-section-dot nexus-section-dot--blue" });
-    bookHeader.createEl("span", { text: "书架", cls: "nexus-section-title" });
-    const bookBody = bookSection.createDiv({ cls: "nexus-section-body" });
-    renderBookshelf(bookBody, this.app, this.plugin, this.cleanupFns);
+    const bookSection = main.createDiv({ cls: "hubstack-section" });
+    const bookHeader = bookSection.createDiv({ cls: "hubstack-section-header" });
+    bookHeader.createDiv({ cls: "hubstack-section-dot hubstack-section-dot--blue" });
+    bookHeader.createEl("span", { text: "书架", cls: "hubstack-section-title" });
+    const bookBody = bookSection.createDiv({ cls: "hubstack-section-body" });
+    renderBookshelf(bookBody, this.app, this.plugin);
   }
 }

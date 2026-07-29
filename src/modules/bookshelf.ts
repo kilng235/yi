@@ -126,11 +126,10 @@ async function extractCoverFromEpub(file: TFile, app: App): Promise<ExtractResul
 export function renderBookshelf(
   el: HTMLElement,
   app: App,
-  plugin: HubstackPlugin,
-  _cleanupFns: Array<() => void>
+  plugin: HubstackPlugin
 ) {
   el.empty();
-  el.addClass("nexus-bookshelf");
+  el.addClass("hubstack-bookshelf");
 
   const epubFiles = app.vault
     .getFiles()
@@ -138,7 +137,7 @@ export function renderBookshelf(
 
   if (epubFiles.length === 0) {
     el.createDiv({
-      cls: "nexus-bookshelf-empty",
+      cls: "hubstack-bookshelf-empty",
       text: "未在 vault 中找到 .epub 文件。",
     });
     return;
@@ -148,7 +147,7 @@ export function renderBookshelf(
   const epubPaths = new Set(epubFiles.map(f => f.path));
   cleanOrphanCovers(app, epubPaths);
 
-  const grid = el.createDiv({ cls: "nexus-bookshelf-grid" });
+  const grid = el.createDiv({ cls: "hubstack-bookshelf-grid" });
 
   for (const file of epubFiles) {
     const entry = getBookEntry(file, plugin);
@@ -171,17 +170,17 @@ function renderBookCard(
   app: App,
   plugin: HubstackPlugin
 ) {
-  const card = el.createDiv({ cls: "nexus-book-card" });
+  const card = el.createDiv({ cls: "hubstack-book-card" });
 
   // Cover placeholder
-  const cover = card.createDiv({ cls: "nexus-book-cover" });
-  cover.createDiv({ cls: "nexus-book-cover-placeholder", text: "📖" });
+  const cover = card.createDiv({ cls: "hubstack-book-cover" });
+  cover.createDiv({ cls: "hubstack-book-cover-placeholder", text: "📖" });
 
   // Load cover async with cache
   loadCoverCached(entry.file, app).then((url) => {
     if (url) {
       cover.empty();
-      const img = cover.createEl("img", { cls: "nexus-book-cover-img" });
+      const img = cover.createEl("img", { cls: "hubstack-book-cover-img" });
       img.src = url;
     }
   }).catch(() => {});
@@ -189,7 +188,7 @@ function renderBookCard(
   // Title
   card.createEl("div", {
     text: entry.file.basename,
-    cls: "nexus-book-title",
+    cls: "hubstack-book-title",
   });
 
   // Status
@@ -197,7 +196,7 @@ function renderBookCard(
   const statusText = stats
     ? formatReadingTime(stats.totalDurationMs)
     : "未开始阅读";
-  card.createEl("div", { text: statusText, cls: "nexus-book-status" });
+  card.createEl("div", { text: statusText, cls: "hubstack-book-status" });
 
   // Click → open in new tab
   card.addEventListener("click", () => {

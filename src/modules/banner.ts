@@ -4,10 +4,11 @@ import { HubstackSettings } from "../types";
 export function renderBanner(
   el: HTMLElement,
   settings: HubstackSettings,
-  app: App
+  app: App,
+  onSave?: () => void | Promise<void>
 ) {
   el.empty();
-  el.addClass("nexus-banner");
+  el.addClass("hubstack-banner");
 
   // Background image
   if (settings.bannerImage) {
@@ -23,7 +24,7 @@ export function renderBanner(
       }
     }
     el.style.backgroundImage = `url("${url}")`;
-    el.addClass("nexus-banner--has-image");
+    el.addClass("hubstack-banner--has-image");
 
     // Apply saved position and zoom
     const pos = settings.bannerPosition || { x: 50, y: 50 };
@@ -39,7 +40,7 @@ export function renderBanner(
     let startPosY = pos.y;
 
     const onMouseDown = (e: MouseEvent) => {
-      if ((e.target as HTMLElement).closest(".nexus-banner-settings")) return;
+      if ((e.target as HTMLElement).closest(".hubstack-banner-settings")) return;
       isDragging = true;
       startX = e.clientX;
       startY = e.clientY;
@@ -80,21 +81,21 @@ export function renderBanner(
 
   // Quote overlay
   if (settings.bannerQuote) {
-    const overlay = el.createDiv({ cls: "nexus-banner-overlay" });
+    const overlay = el.createDiv({ cls: "hubstack-banner-overlay" });
     overlay.createEl("p", {
       text: settings.bannerQuote,
-      cls: "nexus-banner-quote",
+      cls: "hubstack-banner-quote",
     });
     overlay.addEventListener("mousedown", (e) => e.stopPropagation());
   }
 
   // Settings button
-  const settingsBtn = el.createDiv({ cls: "nexus-banner-settings-btn" });
+  const settingsBtn = el.createDiv({ cls: "hubstack-banner-settings-btn" });
   settingsBtn.innerHTML = "⚙";
   settingsBtn.addEventListener("mousedown", (e) => e.stopPropagation());
 
   // Settings panel
-  const panel = el.createDiv({ cls: "nexus-banner-settings" });
+  const panel = el.createDiv({ cls: "hubstack-banner-settings" });
   panel.addEventListener("mousedown", (e) => e.stopPropagation());
   let panelOpen = false;
 
@@ -107,7 +108,7 @@ export function renderBanner(
   };
 
   // Image info
-  const infoRow = panel.createDiv({ cls: "nexus-banner-info" });
+  const infoRow = panel.createDiv({ cls: "hubstack-banner-info" });
   if (settings.bannerImage) {
     const img = new Image();
     let imgUrl = settings.bannerImage;
@@ -118,14 +119,14 @@ export function renderBanner(
     img.onload = () => {
       infoRow.createSpan({
         text: `原图: ${img.naturalWidth}×${img.naturalHeight}`,
-        cls: "nexus-banner-info-text",
+        cls: "hubstack-banner-info-text",
       });
     };
     img.src = imgUrl;
   }
 
   // Height slider
-  const heightRow = panel.createDiv({ cls: "nexus-banner-ctrl" });
+  const heightRow = panel.createDiv({ cls: "hubstack-banner-ctrl" });
   heightRow.createEl("label", { text: "高度" });
   const heightSlider = heightRow.createEl("input", {
     type: "range",
@@ -140,7 +141,7 @@ export function renderBanner(
   });
 
   // Zoom slider
-  const zoomRow = panel.createDiv({ cls: "nexus-banner-ctrl" });
+  const zoomRow = panel.createDiv({ cls: "hubstack-banner-ctrl" });
   zoomRow.createEl("label", { text: "缩放" });
   const zoomSlider = zoomRow.createEl("input", {
     type: "range",
@@ -155,7 +156,7 @@ export function renderBanner(
   });
 
   // Position X
-  const xRow = panel.createDiv({ cls: "nexus-banner-ctrl" });
+  const xRow = panel.createDiv({ cls: "hubstack-banner-ctrl" });
   xRow.createEl("label", { text: "水平" });
   const xSlider = xRow.createEl("input", {
     type: "range",
@@ -170,7 +171,7 @@ export function renderBanner(
   });
 
   // Position Y
-  const yRow = panel.createDiv({ cls: "nexus-banner-ctrl" });
+  const yRow = panel.createDiv({ cls: "hubstack-banner-ctrl" });
   yRow.createEl("label", { text: "垂直" });
   const ySlider = yRow.createEl("input", {
     type: "range",
@@ -185,10 +186,10 @@ export function renderBanner(
   });
 
   // Reset + Save buttons
-  const btnRow = panel.createDiv({ cls: "nexus-banner-btn-row" });
+  const btnRow = panel.createDiv({ cls: "hubstack-banner-btn-row" });
   const resetBtn = btnRow.createEl("button", {
     text: "重置",
-    cls: "nexus-banner-reset-btn",
+    cls: "hubstack-banner-reset-btn",
   });
   resetBtn.addEventListener("click", () => {
     pending.x = 50;
@@ -203,20 +204,20 @@ export function renderBanner(
 
   const saveBtn = btnRow.createEl("button", {
     text: "保存设置",
-    cls: "nexus-banner-save-btn",
+    cls: "hubstack-banner-save-btn",
   });
   saveBtn.addEventListener("click", () => {
     settings.bannerPosition = { x: pending.x, y: pending.y };
     settings.bannerHeight = pending.height;
     settings.bannerZoom = pending.zoom;
-    saveSettings(settings, app);
+    if (onSave) onSave();
     saveBtn.textContent = "已保存 ✓";
     setTimeout(() => {
       saveBtn.textContent = "保存设置";
       // Auto-close panel
       panelOpen = false;
-      panel.removeClass("nexus-banner-settings--open");
-      settingsBtn.removeClass("nexus-banner-settings-btn--active");
+      panel.removeClass("hubstack-banner-settings--open");
+      settingsBtn.removeClass("hubstack-banner-settings-btn--active");
     }, 800);
   });
 
@@ -224,8 +225,8 @@ export function renderBanner(
   settingsBtn.addEventListener("click", (e) => {
     e.stopPropagation();
     panelOpen = !panelOpen;
-    panel.toggleClass("nexus-banner-settings--open", panelOpen);
-    settingsBtn.toggleClass("nexus-banner-settings-btn--active", panelOpen);
+    panel.toggleClass("hubstack-banner-settings--open", panelOpen);
+    settingsBtn.toggleClass("hubstack-banner-settings-btn--active", panelOpen);
   });
 
   // Update slider labels when dragging image
@@ -239,13 +240,6 @@ export function renderBanner(
 
 function getBannerHeight(settings: HubstackSettings): number {
   return settings.bannerHeight || 120;
-}
-
-function saveSettings(settings: HubstackSettings, app: App) {
-  app.vault.adapter.write(
-    app.vault.configDir + "/plugins/hubstack/data.json",
-    JSON.stringify(settings, null, 2)
-  );
 }
 
 export function cleanupBanner(el: HTMLElement) {

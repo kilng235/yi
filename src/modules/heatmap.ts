@@ -5,7 +5,7 @@ const DAY_NAMES = ["周一", "周二", "周三", "周四", "周五", "周六", "
 
 export function renderHeatmap(el: HTMLElement, settings: HubstackSettings, activityLog?: ActivityLog) {
   el.empty();
-  el.addClass("nexus-heatmap");
+  el.addClass("hubstack-heatmap");
 
   const scores = buildDailyScores(settings, activityLog);
   const now = new Date();
@@ -18,14 +18,14 @@ export function renderHeatmap(el: HTMLElement, settings: HubstackSettings, activ
     el.empty();
 
     // Header with total
-    el.createDiv({ cls: "nexus-heatmap-header" })
+    el.createDiv({ cls: "hubstack-heatmap-header" })
       .createEl("h3", { text: `${totalPoints} 活跃度` });
 
     // Month navigation
     const MONTH_NAMES = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
-    const nav = el.createDiv({ cls: "nexus-heatmap-nav" });
+    const nav = el.createDiv({ cls: "hubstack-heatmap-nav" });
 
-    const prevBtn = nav.createDiv({ cls: "nexus-heatmap-arrow" });
+    const prevBtn = nav.createDiv({ cls: "hubstack-heatmap-arrow" });
     prevBtn.innerHTML = "‹";
     prevBtn.addEventListener("click", () => {
       viewMonth--;
@@ -35,10 +35,10 @@ export function renderHeatmap(el: HTMLElement, settings: HubstackSettings, activ
 
     const monthLabel = nav.createSpan({
       text: `${MONTH_NAMES[viewMonth]} ${viewYear}`,
-      cls: "nexus-heatmap-month-name",
+      cls: "hubstack-heatmap-month-name",
     });
 
-    const nextBtn = nav.createDiv({ cls: "nexus-heatmap-arrow" });
+    const nextBtn = nav.createDiv({ cls: "hubstack-heatmap-arrow" });
     nextBtn.innerHTML = "›";
     nextBtn.addEventListener("click", () => {
       viewMonth++;
@@ -48,17 +48,17 @@ export function renderHeatmap(el: HTMLElement, settings: HubstackSettings, activ
 
     // Disable next if already on current month
     if (viewYear === now.getFullYear() && viewMonth === now.getMonth()) {
-      nextBtn.addClass("nexus-heatmap-arrow--disabled");
+      nextBtn.addClass("hubstack-heatmap-arrow--disabled");
     }
 
     // Calendar table
-    const table = el.createEl("table", { cls: "nexus-heatmap-table" });
+    const table = el.createEl("table", { cls: "hubstack-heatmap-table" });
 
     // Header row
     const thead = table.createEl("thead");
     const headerRow = thead.createEl("tr");
     for (const name of DAY_NAMES) {
-      headerRow.createEl("th", { text: name, cls: "nexus-heatmap-th" });
+      headerRow.createEl("th", { text: name, cls: "hubstack-heatmap-th" });
     }
 
     // Calculate days
@@ -78,7 +78,7 @@ export function renderHeatmap(el: HTMLElement, settings: HubstackSettings, activ
 
       for (let d = 0; d < 7; d++) {
         dayNum++;
-        const td = row.createEl("td", { cls: "nexus-heatmap-td" });
+        const td = row.createEl("td", { cls: "hubstack-heatmap-td" });
 
         if (dayNum >= 1 && dayNum <= daysInMonth) {
           const date = new Date(viewYear, viewMonth, dayNum);
@@ -87,10 +87,10 @@ export function renderHeatmap(el: HTMLElement, settings: HubstackSettings, activ
           const level = score === 0 ? 0 : Math.min(4, Math.ceil(score / 10));
 
           const cell = td.createDiv({
-            cls: `nexus-heatmap-cell nexus-heatmap-cell--level-${level}`,
+            cls: `hubstack-heatmap-cell hubstack-heatmap-cell--level-${level}`,
           });
           cell.createDiv({
-            cls: "nexus-heatmap-tip",
+            cls: "hubstack-heatmap-tip",
             text: `${score} 活跃度 · ${viewMonth + 1}月${dayNum}日`,
           });
         }
@@ -98,10 +98,10 @@ export function renderHeatmap(el: HTMLElement, settings: HubstackSettings, activ
     }
 
     // Legend
-    const legend = el.createDiv({ cls: "nexus-heatmap-legend" });
+    const legend = el.createDiv({ cls: "hubstack-heatmap-legend" });
     legend.createSpan({ text: "少" });
     for (let i = 0; i <= 4; i++) {
-      legend.createDiv({ cls: `nexus-heatmap-cell nexus-heatmap-cell--level-${i}` });
+      legend.createDiv({ cls: `hubstack-heatmap-cell hubstack-heatmap-cell--level-${i}` });
     }
     legend.createSpan({ text: "多" });
   }

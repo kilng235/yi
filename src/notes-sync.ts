@@ -1,5 +1,6 @@
 import { App, TFile } from "obsidian";
 import { Note } from "./types";
+import { extractImageWikilinks, deleteImage, deleteImagesFromBody } from "./modules/attachment-store";
 
 const NOTES_FILE = "hubstack/notes.md";
 const LEGACY_JSON = "hubstack/notes.json";
@@ -64,7 +65,15 @@ export class NotesSync {
       const exists = await this.app.vault.adapter.exists(NOTES_FILE);
       if (exists) {
         const raw = await this.app.vault.adapter.read(NOTES_FILE);
-        this.notes = parseNotesFile(raw).sort(this.compareNotes);
+        // Never overwrite this.notes with a failed parse — keep last known
+        // good state so a corrupted file does not silently wipe data on the
+        // next save().
+        try {
+          const parsed = parseNotesFile(raw);
+          this.notes = parsed.sort(this.compareNotes);
+        } catch (e) {
+          console.error("Hubstack: failed to parse notes.md, keeping last known state", e);
+        }
       } else {
         // Try migrating from legacy formats
         this.notes = await this.migrateFromLegacy();
@@ -73,6 +82,8 @@ export class NotesSync {
         }
       }
       await this.notifyCallbacks();
+    } catch (e) {
+      console.error("Hubstack: notes load failed, keeping last known state", e);
     } finally {
       this.loading = false;
     }
@@ -94,8 +105,8 @@ export class NotesSync {
 
   // --- Public API ---
 
-  async addNote(title: string, body: string, tags: string[]): Promise<Note | null> {
-    const id = Date.now().toString(36);
+  async addNote(title: string, body: string, tags: string[], prefilledId?: string): Promise<Note | null> {
+    const id = prefilledId || Date.now().toString(36);
     const now = new Date().toISOString();
     const note: Note = {
       id,
@@ -118,6 +129,18 @@ export class NotesSync {
   async updateNote(id: string, patch: Partial<Pick<Note, "title" | "body" | "tags" | "pinned" | "archived">>): Promise<void> {
     const idx = this.notes.findIndex((n) => n.id === id);
     if (idx === -1) return;
+    const oldNote = this.notes[idx];
+
+    // If body is changing, clean up image files whose wikilinks were removed.
+    if (patch.body !== undefined && patch.body !== oldNote.body) {
+      const oldPaths = new Set(extractImageWikilinks(oldNote.body));
+      const newPaths = new Set(extractImageWikilinks(patch.body));
+      const removed = Array.from(oldPaths).filter((p) => !newPaths.has(p));
+      for (const p of removed) {
+        await deleteImage(this.app, p);
+      }
+    }
+
     this.notes[idx] = {
       ...this.notes[idx],
       ...patch,
@@ -138,6 +161,14 @@ export class NotesSync {
   }
 
   async deleteNote(id: string): Promise<void> {
+    const note = this.notes.find((n) => n.id === id);
+    if (note) {
+      try {
+        await deleteImagesFromBody(this.app, note.body);
+      } catch (e) {
+        console.warn("Hubstack: failed to clean images on delete", e);
+      }
+    }
     this.notes = this.notes.filter((n) => n.id !== id);
     await this.save();
     await this.notifyCallbacks();
@@ -270,33 +301,58 @@ export function parseNotesFile(raw: string): Note[] {
     const endRe = new RegExp(NOTE_END.source, "g");
     endRe.lastIndex = metaStart;
     const endMatch = endRe.exec(raw);
-    if (!endMatch) continue;
+    if (!endMatch) {
+      // Unterminated note block - skip but warn, cannot recover body safely.
+      console.warn("Hubstack: note block missing end marker, skipping");
+      continue;
+    }
 
     const block = raw.slice(metaStart, endMatch.index);
     // First line(s) before the body are the JSON metadata
     const nlIdx = block.indexOf("\n");
-    if (nlIdx === -1) continue;
-
-    try {
-      const meta = JSON.parse(block.slice(0, nlIdx));
-      const body = block.slice(nlIdx + 1).trim();
-      notes.push({
-        id: String(meta.id || ""),
-        title: meta.title || "无标题",
-        body,
-        tags: Array.isArray(meta.tags) ? meta.tags.map(String) : [],
-        pinned: meta.pinned === true,
-        archived: meta.archived === true,
-        createdAt: meta.createdAt || new Date().toISOString(),
-        updatedAt: meta.updatedAt || new Date().toISOString(),
-        filePath: "",
-      });
-    } catch (e) {
-      console.error("Hubstack: failed to parse note block", e);
+    if (nlIdx === -1) {
+      console.warn("Hubstack: note block has no body newline, skipping");
+      continue;
     }
+
+    const metaRaw = block.slice(0, nlIdx);
+    const body = block.slice(nlIdx + 1).trim();
+
+    let meta: any;
+    try {
+      meta = JSON.parse(metaRaw);
+    } catch (e) {
+      // Metadata is corrupted, but body content is still recoverable.
+      // Preserve the note with a fallback id so it is not silently lost
+      // on the next save(). Use a stable hash of the block so repeated
+      // loads keep the same id.
+      console.error("Hubstack: note block has invalid metadata, preserving body with fallback id", e);
+      meta = { id: `recovered-${hashString(metaRaw + body)}` };
+    }
+
+    notes.push({
+      id: String(meta.id || ""),
+      title: meta.title || "无标题",
+      body,
+      tags: Array.isArray(meta.tags) ? meta.tags.map(String) : [],
+      pinned: meta.pinned === true,
+      archived: meta.archived === true,
+      createdAt: meta.createdAt || new Date().toISOString(),
+      updatedAt: meta.updatedAt || new Date().toISOString(),
+      filePath: "",
+    });
   }
 
   return notes;
+}
+
+function hashString(s: string): string {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) {
+    h = (h << 5) - h + s.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h).toString(36);
 }
 
 export function serializeNotesFile(notes: Note[]): string {

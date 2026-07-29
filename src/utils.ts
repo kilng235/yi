@@ -108,27 +108,3 @@ export function getCountdownStatus(name: string, targetDate: string, now: Date =
 
   return { status: "past", title, message: `已过 ${Math.abs(diffDays)} 天`, days: Math.abs(diffDays) };
 }
-
-/** DeepSeek balance API response */
-export interface DeepSeekBalance {
-  is_available: boolean;
-  balance_infos: {
-    currency: string;
-    total_balance: string;
-    granted_balance: string;
-    topped_up_balance: string;
-  }[];
-}
-
-/** Fetch DeepSeek account balance */
-export async function fetchDeepSeekBalance(apiKey: string): Promise<DeepSeekBalance | null> {
-  try {
-    const resp = await fetch("https://api.deepseek.com/user/balance", {
-      headers: { Authorization: `Bearer ${apiKey}` },
-    });
-    if (!resp.ok) return null;
-    return await resp.json();
-  } catch {
-    return null;
-  }
-}

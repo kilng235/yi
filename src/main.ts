@@ -72,10 +72,18 @@ export default class HubstackPlugin extends Plugin {
     const localData = (await this.loadData()) || (await this.loadLegacyLocalData()) || {};
     const externalData = await loadExternalConfig(this.app);
     this.settings = mergeSettings(externalData, localData);
+    // API key is stored in plugin-local data (not synced with vault)
+    if ((localData as any).deepseekApiKey) {
+      this.settings.deepseekApiKey = (localData as any).deepseekApiKey;
+    }
   }
 
   async saveSettings() {
-    await saveExternalConfig(this.app, this.settings);
+    // Exclude sensitive fields from vault-synced config
+    const { deepseekApiKey, ...safeSettings } = this.settings;
+    await saveExternalConfig(this.app, safeSettings as HubstackSettings);
+    // Store API key in plugin-local data (.obsidian/plugins/hubstack/data.json)
+    await this.saveData({ deepseekApiKey });
   }
 
   private async loadLegacyLocalData(): Promise<Partial<HubstackSettings> | null> {

@@ -19,12 +19,12 @@ export class FilePickerModal extends Modal {
     this.inputEl = contentEl.createEl("input", {
       type: "text",
       placeholder: "搜索文件...",
-      cls: "nexus-modal-input",
+      cls: "hubstack-modal-input",
     });
     this.inputEl.style.width = "100%";
     this.inputEl.style.marginTop = "12px";
 
-    this.resultsEl = contentEl.createDiv({ cls: "nexus-file-picker-results" });
+    this.resultsEl = contentEl.createDiv({ cls: "hubstack-file-picker-results" });
     this.resultsEl.style.maxHeight = "300px";
     this.resultsEl.style.overflowY = "auto";
     this.resultsEl.style.marginTop = "8px";
@@ -45,13 +45,13 @@ export class FilePickerModal extends Modal {
   private renderResults(files: TFile[]) {
     this.resultsEl.empty();
     if (files.length === 0) {
-      this.resultsEl.createDiv({ text: "未找到文件", cls: "nexus-file-picker-empty" });
+      this.resultsEl.createDiv({ text: "未找到文件", cls: "hubstack-file-picker-empty" });
       return;
     }
     for (const file of files) {
-      const item = this.resultsEl.createDiv({ cls: "nexus-file-picker-item" });
-      item.createSpan({ text: file.basename, cls: "nexus-file-picker-name" });
-      item.createSpan({ text: file.path, cls: "nexus-file-picker-path" });
+      const item = this.resultsEl.createDiv({ cls: "hubstack-file-picker-item" });
+      item.createSpan({ text: file.basename, cls: "hubstack-file-picker-name" });
+      item.createSpan({ text: file.path, cls: "hubstack-file-picker-path" });
       item.addEventListener("click", () => {
         this.onSelect(file);
         this.close();

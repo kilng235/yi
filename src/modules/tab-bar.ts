@@ -25,11 +25,11 @@ export function renderTabBar(
   onSwitch: (tab: TabId) => void
 ) {
   el.empty();
-  el.addClass("nexus-tab-bar");
+  el.addClass("hubstack-tab-bar");
 
   for (const tab of TABS) {
     const btn = el.createEl("button", {
-      cls: `nexus-tab-btn${tab.id === activeTab ? " nexus-tab-btn--active" : ""}`,
+      cls: `hubstack-tab-btn${tab.id === activeTab ? " hubstack-tab-btn--active" : ""}`,
       attr: {
         type: "button",
         title: tab.label,

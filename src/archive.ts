@@ -2,7 +2,7 @@ import { App } from "obsidian";
 import { KanbanCard } from "./types";
 
 const ARCHIVE_DIR = "hubstack/archive";
-const LEGACY_ARCHIVE_DIRS = ["nexus/archive", "nexus-backup/archive"];
+const LEGACY_ARCHIVE_DIRS = ["nexus/archive", "hubstack-backup/archive"];
 
 function getArchivePath(dateStr: string): string {
   const [year, month] = dateStr.split("-");

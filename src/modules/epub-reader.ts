@@ -81,24 +81,24 @@ export class EpubReaderView extends ItemView {
   private renderError(message: string) {
     const container = this.contentEl;
     container.empty();
-    container.addClass("nexus-epub-standalone");
-    container.createDiv({ cls: "nexus-epub-error", text: message });
+    container.addClass("hubstack-epub-standalone");
+    container.createDiv({ cls: "hubstack-epub-error", text: message });
   }
 
   private async renderReader() {
     const container = this.contentEl;
     container.empty();
-    container.addClass("nexus-epub-standalone");
+    container.addClass("hubstack-epub-standalone");
 
     // Toolbar
-    const toolbar = container.createDiv({ cls: "nexus-epub-toolbar" });
+    const toolbar = container.createDiv({ cls: "hubstack-epub-toolbar" });
     toolbar.createEl("span", {
       text: this.file!.basename,
-      cls: "nexus-epub-title",
+      cls: "hubstack-epub-title",
     });
 
     // Font size
-    const fontGroup = toolbar.createDiv({ cls: "nexus-epub-font-group" });
+    const fontGroup = toolbar.createDiv({ cls: "hubstack-epub-font-group" });
     let fontSize = 100;
     fontGroup.createEl("label", { text: "字号" });
     const fontSlider = fontGroup.createEl("input", {
@@ -108,22 +108,22 @@ export class EpubReaderView extends ItemView {
     const fontLabel = fontGroup.createEl("span", { text: "100%" });
 
     // Stats bar
-    const statsBar = container.createDiv({ cls: "nexus-epub-stats" });
+    const statsBar = container.createDiv({ cls: "hubstack-epub-stats" });
     const sessionLabel = statsBar.createEl("span", { text: "本次: 0s" });
     const totalMs = this.plugin?.settings.readingStats[this.file!.path]?.totalDurationMs || 0;
     const totalLabel = statsBar.createEl("span", { text: `累计: ${formatDuration(totalMs)}` });
     const statusLabel = statsBar.createEl("span", { text: "状态: 未开始" });
 
     // Content area - needs explicit height for epubjs
-    const readerArea = container.createDiv({ cls: "nexus-epub-content-area" });
+    const readerArea = container.createDiv({ cls: "hubstack-epub-content-area" });
     readerArea.style.flex = "1";
     readerArea.style.minHeight = "0";
     readerArea.style.position = "relative";
 
     // Navigation arrows
-    const navPrev = container.createDiv({ cls: "nexus-epub-nav nexus-epub-nav-prev" });
+    const navPrev = container.createDiv({ cls: "hubstack-epub-nav hubstack-epub-nav-prev" });
     navPrev.innerHTML = "‹";
-    const navNext = container.createDiv({ cls: "nexus-epub-nav nexus-epub-nav-next" });
+    const navNext = container.createDiv({ cls: "hubstack-epub-nav hubstack-epub-nav-next" });
     navNext.innerHTML = "›";
 
     // Load epub

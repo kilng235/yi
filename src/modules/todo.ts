@@ -46,7 +46,7 @@ export async function renderTodo(
   cleanupFns: Array<() => void>
 ) {
   el.empty();
-  el.addClass("nexus-todo");
+  el.addClass("hubstack-todo");
 
   const taskCards = data.columns
     .flatMap((col) =>
@@ -75,19 +75,19 @@ export async function renderTodo(
   const archivedCount = await countArchivedThisMonth(app, monthKey);
   const completedCount = todayCount + archivedCount;
 
-  const header = el.createDiv({ cls: "nexus-todo-header" });
-  header.createDiv({ cls: "nexus-todo-stats" }).createEl("span", {
-    cls: "nexus-todo-stat nexus-todo-stat--pending",
+  const header = el.createDiv({ cls: "hubstack-todo-header" });
+  header.createDiv({ cls: "hubstack-todo-stats" }).createEl("span", {
+    cls: "hubstack-todo-stat hubstack-todo-stat--pending",
     text: `待办 ${pendingCount}`,
   });
   header.createSpan({
-    cls: "nexus-todo-stat nexus-todo-stat--completed",
+    cls: "hubstack-todo-stat hubstack-todo-stat--completed",
     text: `本月完成 ${completedCount}`,
   });
 
   // Add task button
   const addBtn = header.createEl("button", {
-    cls: "nexus-todo-add-btn",
+    cls: "hubstack-todo-add-btn",
     text: "+ 添加任务",
   });
   addBtn.addEventListener("click", () => {
@@ -110,22 +110,22 @@ export async function renderTodo(
     }).open();
   });
 
-  const listEl = el.createDiv({ cls: "nexus-todo-list" });
+  const listEl = el.createDiv({ cls: "hubstack-todo-list" });
 
   if (taskCards.length === 0) {
     listEl.createDiv({
-      cls: "nexus-todo-empty",
+      cls: "hubstack-todo-empty",
       text: "暂无任务。点击上方「添加任务」创建。",
     });
     return;
   }
 
   for (const card of taskCards) {
-    const itemEl = listEl.createDiv({ cls: "nexus-todo-item" });
+    const itemEl = listEl.createDiv({ cls: "hubstack-todo-item" });
 
     const checkbox = itemEl.createEl("input", {
       type: "checkbox",
-      cls: "nexus-todo-checkbox",
+      cls: "hubstack-todo-checkbox",
     }) as HTMLInputElement;
     checkbox.checked = card.checked;
     checkbox.addEventListener("change", async () => {
@@ -134,14 +134,14 @@ export async function renderTodo(
 
     const label = itemEl.createEl("span", {
       text: card.title,
-      cls: "nexus-todo-label",
+      cls: "hubstack-todo-label",
     });
-    if (card.checked) label.addClass("nexus-todo-label--done");
+    if (card.checked) label.addClass("hubstack-todo-label--done");
 
     // Show column name as context
     itemEl.createEl("span", {
       text: card.columnName,
-      cls: "nexus-todo-context",
+      cls: "hubstack-todo-context",
     });
   }
 }

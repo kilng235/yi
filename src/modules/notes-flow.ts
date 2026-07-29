@@ -2,6 +2,8 @@ import { App } from "obsidian";
 import { Note } from "../types";
 import { NotesSync, extractTagsFromBody } from "../notes-sync";
 import { NoteEditorModal } from "./note-editor-modal";
+import { renderBody, bodyPlainText } from "./body-renderer";
+import { attachImagePasteHandler } from "./paste-handler";
 
 const MASONRY_GAP = 14;
 const MIN_CARD_WIDTH = 300;
@@ -43,7 +45,7 @@ export function renderNotesFlow(
   _onStateChange: (render: () => void) => void
 ) {
   el.empty();
-  el.addClass("nexus-notes-flow");
+  el.addClass("hubstack-notes-flow");
 
   const state: FlowState = {
     searchQuery: "",
@@ -54,11 +56,11 @@ export function renderNotesFlow(
   };
 
   const ctx: FlowCtx = { app, sync, cleanupFns, notes };
-  const layout = el.createDiv({ cls: "nexus-notes-layout" });
-  const flowBody = layout.createDiv({ cls: "nexus-notes-body" });
+  const layout = el.createDiv({ cls: "hubstack-notes-layout" });
+  const flowBody = layout.createDiv({ cls: "hubstack-notes-body" });
   const refs: MasonryRefs = {
     flowBody,
-    board: flowBody.createDiv({ cls: "nexus-notes-board" }),
+    board: flowBody.createDiv({ cls: "hubstack-notes-board" }),
   };
 
   const renderBoard = () => {
@@ -139,26 +141,26 @@ function renderToolbar(
   state: FlowState,
   rerenderBoard: () => void
 ): ToolbarRefs {
-  const toolbar = el.createDiv({ cls: "nexus-notes-toolbar" });
+  const toolbar = el.createDiv({ cls: "hubstack-notes-toolbar" });
 
-  const searchWrap = toolbar.createDiv({ cls: "nexus-notes-search" });
+  const searchWrap = toolbar.createDiv({ cls: "hubstack-notes-search" });
   const searchInput = searchWrap.createEl("input", {
     type: "text",
     placeholder: "搜索小记、标签或关键词",
-    cls: "nexus-notes-search-input",
+    cls: "hubstack-notes-search-input",
   }) as HTMLInputElement;
   searchInput.addEventListener("input", () => {
     state.searchQuery = searchInput.value.trim();
     rerenderBoard();
   });
 
-  const tagsRow = toolbar.createDiv({ cls: "nexus-notes-tags" });
+  const tagsRow = toolbar.createDiv({ cls: "hubstack-notes-tags" });
   const renderTags = () => {
     tagsRow.empty();
     const tags = collectVisibleTags(ctx.notes, state.showArchived);
     for (const tag of tags) {
       const chip = tagsRow.createEl("button", {
-        cls: `nexus-notes-tag-chip${state.activeTags.has(tag) ? " nexus-notes-tag-chip--active" : ""}`,
+        cls: `hubstack-notes-tag-chip${state.activeTags.has(tag) ? " hubstack-notes-tag-chip--active" : ""}`,
         text: `#${tag}`,
       });
       chip.addEventListener("click", () => {
@@ -188,23 +190,24 @@ function renderActionSidebar(
   toolbarRefs: ToolbarRefs,
   rerenderBoard: () => void
 ) {
-  const sidePanel = layout.createDiv({ cls: "nexus-notes-sidepanel" });
-  const actions = sidePanel.createDiv({ cls: "nexus-notes-sidepanel-group" });
+  const sidePanel = layout.createDiv({ cls: "hubstack-notes-sidepanel" });
+  const actions = sidePanel.createDiv({ cls: "hubstack-notes-sidepanel-group" });
 
   const addBtn = createSideButton(actions, {
-    cls: "nexus-notes-sidebutton nexus-notes-sidebutton--primary",
+    cls: "hubstack-notes-sidebutton hubstack-notes-sidebutton--primary",
     label: "新增",
     svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
     title: "新建小记 (Ctrl+Enter)",
   });
   addBtn.addEventListener("click", () => {
+    const pendingId = Date.now().toString(36);
     new NoteEditorModal(app, "create", null, async (data) => {
-      await sync.addNote(data.title, data.body, data.tags);
-    }).open();
+      await sync.addNote(data.title, data.body, data.tags, pendingId);
+    }, { pendingId }).open();
   });
 
   const archiveBtn = createSideButton(actions, {
-    cls: `nexus-notes-sidebutton${state.showArchived ? " nexus-notes-sidebutton--active" : ""}`,
+    cls: `hubstack-notes-sidebutton${state.showArchived ? " hubstack-notes-sidebutton--active" : ""}`,
     label: state.showArchived ? "当前为归档视图" : "查看归档",
     svg: `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><line x1="10" y1="12" x2="14" y2="12"/></svg>`,
     title: state.showArchived ? "切回未归档小记" : "查看归档小记",
@@ -214,7 +217,7 @@ function renderActionSidebar(
     state.activeTags.clear();
     toolbarRefs.resetSearch();
     toolbarRefs.refreshTags();
-    archiveBtn.toggleClass("nexus-notes-sidebutton--active", state.showArchived);
+    archiveBtn.toggleClass("hubstack-notes-sidebutton--active", state.showArchived);
     archiveBtn.setAttribute("aria-label", state.showArchived ? "当前为归档视图" : "查看归档");
     archiveBtn.setAttribute("title", state.showArchived ? "切回未归档小记" : "查看归档小记");
     rerenderBoard();
@@ -247,27 +250,19 @@ function collectVisibleTags(notes: Note[], showArchived: boolean): string[] {
   return Array.from(allTags).sort((a, b) => a.localeCompare(b));
 }
 
-function renderBoardHeader(container: HTMLElement, totalCount: number) {
-  const header = container.createDiv({ cls: "nexus-notes-board-header" });
-  const title = header.createDiv({ cls: "nexus-notes-board-title" });
-  title.createSpan({ cls: "nexus-notes-board-title-main", text: "NOT" });
-  title.createSpan({ cls: "nexus-notes-board-title-accent", text: "ES" });
-  header.createDiv({ cls: "nexus-notes-board-subtitle", text: "Hubstack / 小记板块" });
-}
-
 function renderPinnedFeatured(
   container: HTMLElement,
   notes: Note[],
   ctx: FlowCtx,
   state: FlowState
 ) {
-  const section = container.createDiv({ cls: "nexus-notes-featured" });
+  const section = container.createDiv({ cls: "hubstack-notes-featured" });
 
   // Left: heading
-  const left = section.createDiv({ cls: "nexus-notes-featured-left" });
-  left.createDiv({ cls: "nexus-notes-featured-label", text: "PINNED" });
-  left.createDiv({ cls: "nexus-notes-featured-heading", text: "置顶小记" });
-  left.createDiv({ cls: "nexus-notes-featured-hint", text: `${notes.length} 条已置顶 · 点击卡片展开编辑` });
+  const left = section.createDiv({ cls: "hubstack-notes-featured-left" });
+  left.createDiv({ cls: "hubstack-notes-featured-label", text: "PINNED" });
+  left.createDiv({ cls: "hubstack-notes-featured-heading", text: "置顶小记" });
+  left.createDiv({ cls: "hubstack-notes-featured-hint", text: `${notes.length} 条已置顶 · 点击卡片展开编辑` });
 
   // Right: first pinned note as featured card
   const featured = notes[0];
@@ -277,28 +272,28 @@ function renderPinnedFeatured(
     // Render standard edit card in place of the featured layout
     renderNoteCard(section, featured, ctx, state, { pinnedLayout: false });
   } else {
-    const card = section.createDiv({ cls: "nexus-notes-featured-card" });
+    const card = section.createDiv({ cls: "hubstack-notes-featured-card" });
 
     // Header row: PINNED tag + menu button
-    const topRow = card.createDiv({ cls: "nexus-notes-featured-card-toprow" });
-    topRow.createDiv({ cls: "nexus-notes-featured-card-tag", text: "PINNED" });
+    const topRow = card.createDiv({ cls: "hubstack-notes-featured-card-toprow" });
+    topRow.createDiv({ cls: "hubstack-notes-featured-card-tag", text: "PINNED" });
 
     const { cleanupFns } = ctx;
     const menuBtn = topRow.createEl("button", {
-      cls: "nexus-note-card-menu",
+      cls: "hubstack-note-card-menu",
       attr: { "aria-label": "更多操作", type: "button" },
       text: "⋯",
     });
-    const menu = card.createDiv({ cls: "nexus-note-card-menu-popup nexus-note-card-menu-popup--hidden" });
+    const menu = card.createDiv({ cls: "hubstack-note-card-menu-popup hubstack-note-card-menu-popup--hidden" });
     let menuOpen = false;
     const closeMenu = () => {
       menuOpen = false;
-      menu.addClass("nexus-note-card-menu-popup--hidden");
+      menu.addClass("hubstack-note-card-menu-popup--hidden");
     };
     menuBtn.addEventListener("click", (event) => {
       event.stopPropagation();
       menuOpen = !menuOpen;
-      menu.toggleClass("nexus-note-card-menu-popup--hidden", !menuOpen);
+      menu.toggleClass("hubstack-note-card-menu-popup--hidden", !menuOpen);
     });
     const onDocClick = (event: Event) => {
       if (menuOpen && !menu.contains(event.target as Node) && event.target !== menuBtn) {
@@ -320,33 +315,39 @@ function renderPinnedFeatured(
       closeMenu();
       await ctx.sync.setArchived(featured.id, !featured.archived);
     });
-    const deleteBtn = menu.createEl("button", { text: "删除", cls: "nexus-note-card-menu-delete" });
+    const deleteBtn = menu.createEl("button", { text: "删除", cls: "hubstack-note-card-menu-delete" });
     deleteBtn.addEventListener("click", async (event) => {
       event.stopPropagation();
       closeMenu();
       await ctx.sync.deleteNote(featured.id);
     });
 
-    card.createDiv({ cls: "nexus-notes-featured-card-title", text: getDisplayTitle(featured) });
+    card.createDiv({ cls: "hubstack-notes-featured-card-title", text: getDisplayTitle(featured) });
     if (featured.body) {
-      const body = card.createDiv({ cls: "nexus-notes-featured-card-body" });
-      body.setText(featured.body.length > 120 ? featured.body.slice(0, 120) + "…" : featured.body);
+      const body = card.createDiv({ cls: "hubstack-notes-featured-card-body" });
+      const plain = bodyPlainText(featured.body);
+      if (plain.length > 120) {
+        body.setText(plain.slice(0, 120) + "…");
+      } else if (plain) {
+        body.setText(plain);
+      }
+      // Also render the first image if present, as a small preview
+      renderBody(body, featured.body, ctx.app, { maxImageWidth: 200 });
     }
 
     // Metrics row
-    const metrics = card.createDiv({ cls: "nexus-notes-featured-card-metrics" });
-    const m1 = metrics.createDiv({ cls: "nexus-notes-featured-metric" });
-    m1.createDiv({ cls: "nexus-notes-featured-metric-value", text: `${featured.body.length}` });
-    m1.createDiv({ cls: "nexus-notes-featured-metric-label", text: "字数" });
-    const m2 = metrics.createDiv({ cls: "nexus-notes-featured-metric" });
-    m2.createDiv({ cls: "nexus-notes-featured-metric-value", text: `${notes.length}` });
-    m2.createDiv({ cls: "nexus-notes-featured-metric-label", text: "置顶" });
-    const m3 = metrics.createDiv({ cls: "nexus-notes-featured-metric" });
-    m3.createDiv({ cls: "nexus-notes-featured-metric-value", text: formatDate(featured.updatedAt) });
-    m3.createDiv({ cls: "nexus-notes-featured-metric-label", text: "更新" });
+    const metrics = card.createDiv({ cls: "hubstack-notes-featured-card-metrics" });
+    const m1 = metrics.createDiv({ cls: "hubstack-notes-featured-metric" });
+    m1.createDiv({ cls: "hubstack-notes-featured-metric-value", text: `${bodyPlainText(featured.body).length}` });
+    m1.createDiv({ cls: "hubstack-notes-featured-metric-label", text: "字数" });
+    const m2 = metrics.createDiv({ cls: "hubstack-notes-featured-metric" });
+    m2.createDiv({ cls: "hubstack-notes-featured-metric-value", text: `${notes.length}` });
+    m2.createDiv({ cls: "hubstack-notes-featured-metric-label", text: "置顶" });
+    const m3 = metrics.createDiv({ cls: "hubstack-notes-featured-metric" });
+    m3.createDiv({ cls: "hubstack-notes-featured-metric-value", text: formatDate(featured.updatedAt) });
+    m3.createDiv({ cls: "hubstack-notes-featured-metric-label", text: "更新" });
 
-    // Arrow
-    card.createDiv({ cls: "nexus-notes-featured-card-arrow", text: "→" });
+    // Arrow removed (no longer needed)
 
     // Click to edit (skip if clicking a button)
     card.addEventListener("click", (event) => {
@@ -357,18 +358,11 @@ function renderPinnedFeatured(
 
   // Remaining pinned notes as compact cards below
   if (notes.length > 1) {
-    const rest = container.createDiv({ cls: "nexus-notes-pinned-rest" });
+    const rest = container.createDiv({ cls: "hubstack-notes-pinned-rest" });
     for (let i = 1; i < notes.length; i++) {
       renderNoteCard(rest, notes[i], ctx, state, { pinnedLayout: false });
     }
   }
-}
-
-function renderCounterRow(container: HTMLElement, count: number) {
-  const row = container.createDiv({ cls: "nexus-notes-counter-row" });
-  const counter = row.createDiv({ cls: "nexus-notes-counter" });
-  counter.createEl("strong", { text: String(count).padStart(2, "0") });
-  counter.createSpan({ text: ` 条小记` });
 }
 
 function renderMasonryBoard(
@@ -378,13 +372,13 @@ function renderMasonryBoard(
   ctx: FlowCtx,
   state: FlowState
 ) {
-  const board = container.createDiv({ cls: "nexus-notes-masonry" });
+  const board = container.createDiv({ cls: "hubstack-notes-masonry" });
   const columnCount = getColumnCount(viewport.clientWidth || viewport.offsetWidth || 0);
   const columns: HTMLElement[] = [];
   const heights = Array.from({ length: columnCount }, () => 0);
 
   for (let i = 0; i < columnCount; i++) {
-    columns.push(board.createDiv({ cls: "nexus-notes-column" }));
+    columns.push(board.createDiv({ cls: "hubstack-notes-column" }));
   }
 
   for (const note of notes) {
@@ -396,13 +390,13 @@ function renderMasonryBoard(
 }
 
 function renderEmptyState(container: HTMLElement, isArchived: boolean) {
-  const empty = container.createDiv({ cls: "nexus-notes-empty" });
+  const empty = container.createDiv({ cls: "hubstack-notes-empty" });
   empty.createDiv({
-    cls: "nexus-notes-empty-text",
+    cls: "hubstack-notes-empty-text",
     text: isArchived ? "归档空空如也" : "还没有小记",
   });
   empty.createDiv({
-    cls: "nexus-notes-empty-hint",
+    cls: "hubstack-notes-empty-hint",
     text: isArchived
       ? "归档后的小记会继续留在这里"
       : "点击右下角 + 按钮，或者用 Ctrl+Enter 快速写下第一条随手记",
@@ -437,12 +431,12 @@ function renderNoteCard(
   options: { pinnedLayout?: boolean } = {}
 ): HTMLElement {
   const card = document.createElement("article");
-  card.addClass("nexus-note-card");
-  if (note.pinned) card.addClass("nexus-note-card--pinned");
-  if (options.pinnedLayout) card.addClass("nexus-note-card--pinned-layout");
+  card.addClass("hubstack-note-card");
+  if (note.pinned) card.addClass("hubstack-note-card--pinned");
+  if (options.pinnedLayout) card.addClass("hubstack-note-card--pinned-layout");
 
   const isEditing = state.editingId === note.id;
-  if (isEditing) card.addClass("nexus-note-card--editing");
+  if (isEditing) card.addClass("hubstack-note-card--editing");
 
   if (isEditing) {
     renderNoteCardEdit(card, note, ctx, state);
@@ -461,41 +455,41 @@ function renderNoteCardDisplay(
   state: FlowState
 ) {
   const { sync, cleanupFns } = ctx;
-  const content = card.createDiv({ cls: "nexus-note-card-content" });
+  const content = card.createDiv({ cls: "hubstack-note-card-content" });
 
   // Top label
-  const topLabel = content.createDiv({ cls: "nexus-note-card-toplabel" });
+  const topLabel = content.createDiv({ cls: "hubstack-note-card-toplabel" });
   topLabel.setText("笔记");
 
   // Header: title + menu
-  const header = content.createDiv({ cls: "nexus-note-card-header" });
+  const header = content.createDiv({ cls: "hubstack-note-card-header" });
 
-  const titleWrap = header.createDiv({ cls: "nexus-note-card-title-wrap" });
+  const titleWrap = header.createDiv({ cls: "hubstack-note-card-title-wrap" });
   const derivedTitle = getDisplayTitle(note);
   const isGeneratedTitle = !note.title.trim();
   titleWrap.createEl("h4", {
     text: derivedTitle,
-    cls: `nexus-note-card-title${isGeneratedTitle ? " nexus-note-card-title--generated" : ""}`,
+    cls: `hubstack-note-card-title${isGeneratedTitle ? " hubstack-note-card-title--generated" : ""}`,
   });
 
   const menuBtn = header.createEl("button", {
-    cls: "nexus-note-card-menu",
+    cls: "hubstack-note-card-menu",
     attr: { "aria-label": "更多操作", type: "button" },
     text: "⋯",
   });
 
-  const menu = card.createDiv({ cls: "nexus-note-card-menu-popup nexus-note-card-menu-popup--hidden" });
+  const menu = card.createDiv({ cls: "hubstack-note-card-menu-popup hubstack-note-card-menu-popup--hidden" });
   let menuOpen = false;
 
   const closeMenu = () => {
     menuOpen = false;
-    menu.addClass("nexus-note-card-menu-popup--hidden");
+    menu.addClass("hubstack-note-card-menu-popup--hidden");
   };
 
   menuBtn.addEventListener("click", (event) => {
     event.stopPropagation();
     menuOpen = !menuOpen;
-    menu.toggleClass("nexus-note-card-menu-popup--hidden", !menuOpen);
+    menu.toggleClass("hubstack-note-card-menu-popup--hidden", !menuOpen);
   });
 
   const onDocClick = (event: Event) => {
@@ -529,7 +523,7 @@ function renderNoteCardDisplay(
     enterEditMode(note, state, card);
   });
 
-  const deleteBtn = menu.createEl("button", { text: "删除", cls: "nexus-note-card-menu-delete" });
+  const deleteBtn = menu.createEl("button", { text: "删除", cls: "hubstack-note-card-menu-delete" });
   deleteBtn.addEventListener("click", async (event) => {
     event.stopPropagation();
     closeMenu();
@@ -538,16 +532,17 @@ function renderNoteCardDisplay(
 
   // Body
   if (note.body) {
-    const body = content.createDiv({ cls: "nexus-note-card-body" });
-    const shouldCollapse = note.body.length > BODY_COLLAPSE_LENGTH;
+    const body = content.createDiv({ cls: "hubstack-note-card-body" });
+    const plainLen = bodyPlainText(note.body).length;
+    const shouldCollapse = plainLen > BODY_COLLAPSE_LENGTH;
     const isExpanded = state.expandedIds.has(note.id);
-    body.setText(note.body);
+    renderBody(body, note.body, ctx.app);
     if (shouldCollapse && !isExpanded) {
-      body.addClass("nexus-note-card-body--collapsed");
+      body.addClass("hubstack-note-card-body--collapsed");
     }
     if (shouldCollapse) {
       const toggle = content.createEl("button", {
-        cls: "nexus-note-card-expand",
+        cls: "hubstack-note-card-expand",
         attr: { type: "button" },
         text: isExpanded ? "收起" : "展开全文",
       });
@@ -561,7 +556,7 @@ function renderNoteCardDisplay(
   }
 
   // Metrics footer row — display tags directly, left-aligned
-  const footer = content.createDiv({ cls: "nexus-note-card-footer nexus-note-card-metrics" });
+  const footer = content.createDiv({ cls: "hubstack-note-card-footer hubstack-note-card-metrics" });
   footer.style.justifyContent = "flex-start";
   footer.style.borderTop = "none";
   footer.style.paddingTop = "0";
@@ -570,8 +565,7 @@ function renderNoteCardDisplay(
     footer.createSpan({ text: note.tags.map((t) => `#${t}`).join(" "), style: "font-size:14px;font-weight:700;color:var(--nx-text);letter-spacing:-0.01em;line-height:1.2" });
   }
 
-  // Arrow indicator
-  content.createDiv({ cls: "nexus-note-card-arrow", text: "→" });
+  // Arrow indicator removed
 
   card.addEventListener("click", (event) => {
     if ((event.target as HTMLElement).closest("button")) return;
@@ -586,13 +580,13 @@ function renderNoteCardEdit(
   state: FlowState
 ) {
   const { sync, cleanupFns } = ctx;
-  const content = card.createDiv({ cls: "nexus-note-card-content" });
+  const content = card.createDiv({ cls: "hubstack-note-card-content" });
 
-  const header = content.createDiv({ cls: "nexus-note-card-header" });
+  const header = content.createDiv({ cls: "hubstack-note-card-header" });
 
-  const titleWrap = header.createDiv({ cls: "nexus-note-card-title-wrap" });
+  const titleWrap = header.createDiv({ cls: "hubstack-note-card-title-wrap" });
   const titleInput = titleWrap.createEl("textarea", {
-    cls: "nexus-note-card-title-input",
+    cls: "hubstack-note-card-title-input",
     attr: { rows: "1", placeholder: "无标题" },
   }) as HTMLTextAreaElement;
   titleInput.value = note.title.trim();
@@ -602,27 +596,36 @@ function renderNoteCardEdit(
     ? "\n\n" + note.tags.map((t) => `#${t}`).join(" ")
     : "";
   const bodyInput = content.createEl("textarea", {
-    cls: "nexus-note-card-body-input",
+    cls: "hubstack-note-card-body-input",
     attr: { placeholder: "写点什么..." },
   }) as HTMLTextAreaElement;
   bodyInput.value = note.body + tagSuffix;
 
+  // Image paste support
+  const pasteHandle = attachImagePasteHandler({
+    app: ctx.app,
+    noteId: note.id,
+    textarea: bodyInput,
+    onSaved: () => autoResize(bodyInput),
+  });
+  cleanupFns.push(() => pasteHandle.detach());
+
   // Live tag preview container
-  const tagsContainer = content.createDiv({ cls: "nexus-note-card-tags nexus-note-card-tags--live" });
+  const tagsContainer = content.createDiv({ cls: "hubstack-note-card-tags hubstack-note-card-tags--live" });
 
   const refreshTagPreview = () => {
     tagsContainer.empty();
     const { tags } = extractTagsFromBody(bodyInput.value);
     for (const tag of tags) {
-      tagsContainer.createSpan({ text: `#${tag}`, cls: "nexus-note-card-tag" });
+      tagsContainer.createSpan({ text: `#${tag}`, cls: "hubstack-note-card-tag" });
     }
   };
   refreshTagPreview();
 
   // Footer with edit hint
-  const footer = content.createDiv({ cls: "nexus-note-card-footer" });
+  const footer = content.createDiv({ cls: "hubstack-note-card-footer" });
   footer.createSpan({
-    cls: "nexus-note-card-edit-hint",
+    cls: "hubstack-note-card-edit-hint",
     text: "Ctrl+Enter 保存 · Esc 退出",
   });
 
@@ -728,7 +731,7 @@ function arraysEqual(a: string[], b: string[]): boolean {
 }
 
 function rerenderClosestBoard(card: HTMLElement) {
-  const flow = card.closest(".nexus-notes-flow");
+  const flow = card.closest(".hubstack-notes-flow");
   if (!flow) return;
   flow.dispatchEvent(new Event("hubstack:notes-relayout"));
 }
@@ -736,10 +739,10 @@ function rerenderClosestBoard(card: HTMLElement) {
 function getDisplayTitle(note: Note): string {
   const title = note.title.trim();
   if (title) return title;
-  const compact = note.body.replace(/\s+/g, " ").trim();
-  if (!compact) return "无标题";
-  if (compact.length <= TITLE_FALLBACK_LENGTH) return compact;
-  return `${compact.slice(0, TITLE_FALLBACK_LENGTH)}…`;
+  const plain = bodyPlainText(note.body).replace(/\s+/g, " ").trim();
+  if (!plain) return "无标题";
+  if (plain.length <= TITLE_FALLBACK_LENGTH) return plain;
+  return `${plain.slice(0, TITLE_FALLBACK_LENGTH)}…`;
 }
 
 function formatDate(iso: string): string {

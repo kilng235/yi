@@ -25,12 +25,12 @@ export class InputModal extends Modal {
     this.inputEl = contentEl.createEl("input", {
       type: "text",
       placeholder: this.placeholder,
-      cls: "nexus-modal-input",
+      cls: "hubstack-modal-input",
     });
     this.inputEl.style.width = "100%";
     this.inputEl.style.marginTop = "12px";
 
-    const btnRow = contentEl.createDiv({ cls: "nexus-modal-buttons" });
+    const btnRow = contentEl.createDiv({ cls: "hubstack-modal-buttons" });
     btnRow.style.marginTop = "12px";
     btnRow.style.display = "flex";
     btnRow.style.justifyContent = "flex-end";

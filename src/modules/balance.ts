@@ -15,32 +15,32 @@ export function renderBalance(
   settings: HubstackSettings
 ) {
   el.empty();
-  el.addClass("nexus-balance");
+  el.addClass("hubstack-balance");
 
-  const header = el.createDiv({ cls: "nexus-balance-header" });
-  header.createDiv({ cls: "nexus-section-dot nexus-section-dot--green" });
-  header.createEl("span", { text: "DeepSeek 余额", cls: "nexus-section-title" });
+  const header = el.createDiv({ cls: "hubstack-balance-header" });
+  header.createDiv({ cls: "hubstack-section-dot hubstack-section-dot--green" });
+  header.createEl("span", { text: "DeepSeek 余额", cls: "hubstack-section-title" });
 
-  const body = el.createDiv({ cls: "nexus-balance-body" });
+  const body = el.createDiv({ cls: "hubstack-balance-body" });
 
   const apiKey = settings.deepseekApiKey;
   if (!apiKey) {
     body.createDiv({
-      cls: "nexus-balance-empty",
+      cls: "hubstack-balance-empty",
       text: "未配置 API Key，请在设置中添加",
     });
     return;
   }
 
   // Loading state
-  body.createDiv({ cls: "nexus-balance-loading", text: "加载中..." });
+  body.createDiv({ cls: "hubstack-balance-loading", text: "加载中..." });
 
   // Fetch balance
   fetchBalance(apiKey).then((data) => {
     body.empty();
     if (!data || !data.is_available) {
       body.createDiv({
-        cls: "nexus-balance-empty",
+        cls: "hubstack-balance-empty",
         text: "无法获取余额信息",
       });
       return;
@@ -48,7 +48,7 @@ export function renderBalance(
 
     const info = data.balance_infos?.[0];
     if (!info) {
-      body.createDiv({ cls: "nexus-balance-empty", text: "无余额数据" });
+      body.createDiv({ cls: "hubstack-balance-empty", text: "无余额数据" });
       return;
     }
 
@@ -57,16 +57,16 @@ export function renderBalance(
     const topped = parseFloat(info.topped_up_balance);
 
     // Main balance display
-    const mainRow = body.createDiv({ cls: "nexus-balance-main" });
+    const mainRow = body.createDiv({ cls: "hubstack-balance-main" });
     mainRow.createDiv({
-      cls: "nexus-balance-amount",
+      cls: "hubstack-balance-amount",
       text: `¥${total.toFixed(2)}`,
     });
 
     // Progress bar (assuming 100 CNY as reference, adjust as needed)
-    const barContainer = body.createDiv({ cls: "nexus-balance-bar-bg" });
+    const barContainer = body.createDiv({ cls: "hubstack-balance-bar-bg" });
     const percentage = Math.min(100, (total / 100) * 100);
-    const bar = barContainer.createDiv({ cls: "nexus-balance-bar" });
+    const bar = barContainer.createDiv({ cls: "hubstack-balance-bar" });
     bar.style.width = `${percentage}%`;
     // Color based on remaining
     if (total < 10) {
@@ -76,21 +76,21 @@ export function renderBalance(
     }
 
     // Detail row
-    const detailRow = body.createDiv({ cls: "nexus-balance-detail" });
+    const detailRow = body.createDiv({ cls: "hubstack-balance-detail" });
     detailRow.createSpan({
       text: `赠送: ¥${granted.toFixed(2)}`,
-      cls: "nexus-balance-tag",
+      cls: "hubstack-balance-tag",
     });
     detailRow.createSpan({
       text: `充值: ¥${topped.toFixed(2)}`,
-      cls: "nexus-balance-tag",
+      cls: "hubstack-balance-tag",
     });
 
     // Status
-    const statusRow = body.createDiv({ cls: "nexus-balance-status" });
+    const statusRow = body.createDiv({ cls: "hubstack-balance-status" });
     statusRow.createSpan({
       text: data.is_available ? "● 可用" : "○ 不可用",
-      cls: data.is_available ? "nexus-balance-ok" : "nexus-balance-off",
+      cls: data.is_available ? "hubstack-balance-ok" : "hubstack-balance-off",
     });
   });
 }

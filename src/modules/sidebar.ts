@@ -10,16 +10,16 @@ export function renderSidebar(
   cleanupFns: Array<() => void>
 ) {
   el.empty();
-  el.addClass("nexus-sidebar");
+  el.addClass("hubstack-sidebar");
 
   // === Quick Links ===
-  const linksSection = el.createDiv({ cls: "nexus-sidebar-section" });
-  linksSection.createEl("h3", { text: "快捷链接", cls: "nexus-sidebar-title" });
+  const linksSection = el.createDiv({ cls: "hubstack-sidebar-section" });
+  linksSection.createEl("h3", { text: "快捷链接", cls: "hubstack-sidebar-title" });
 
-  const linksList = linksSection.createDiv({ cls: "nexus-quick-links" });
+  const linksList = linksSection.createDiv({ cls: "hubstack-quick-links" });
   renderQuickLinks(linksList, plugin);
 
-  const addLinkBtn = linksSection.createDiv({ cls: "nexus-sidebar-add-btn" });
+  const addLinkBtn = linksSection.createDiv({ cls: "hubstack-sidebar-add-btn" });
   addLinkBtn.setText("+ 添加链接");
   addLinkBtn.addEventListener("click", () => {
     new InputModal(app, "添加快捷链接", "名称", async (name) => {
@@ -32,26 +32,30 @@ export function renderSidebar(
   });
 
   // === Recently Edited ===
-  const recentSection = el.createDiv({ cls: "nexus-sidebar-section" });
-  recentSection.createEl("h3", { text: "最近编辑", cls: "nexus-sidebar-title" });
+  const recentSection = el.createDiv({ cls: "hubstack-sidebar-section" });
+  recentSection.createEl("h3", { text: "最近编辑", cls: "hubstack-sidebar-title" });
 
-  const recentList = recentSection.createDiv({ cls: "nexus-recent-list" });
+  const recentList = recentSection.createDiv({ cls: "hubstack-recent-list" });
   renderRecentFiles(recentList, app, plugin);
 
   const refreshRecent = () => renderRecentFiles(recentList, app, plugin);
-  plugin.registerEvent(app.vault.on("modify", (f) => {
+  const modifyRef = app.vault.on("modify", (f) => {
     if (f instanceof TFile && f.extension === "md") refreshRecent();
-  }));
-  plugin.registerEvent(app.vault.on("create", (f) => {
+  });
+  const createRef = app.vault.on("create", (f) => {
     if (f instanceof TFile && f.extension === "md") refreshRecent();
-  }));
+  });
+  cleanupFns.push(() => {
+    app.vault.offref(modifyRef);
+    app.vault.offref(createRef);
+  });
 
   // === DeepSeek Balance ===
-  const balanceSection = el.createDiv({ cls: "nexus-sidebar-section" });
+  const balanceSection = el.createDiv({ cls: "hubstack-sidebar-section" });
   renderSidebarBalance(balanceSection, plugin);
 
   // === Countdown ===
-  const countdownSection = el.createDiv({ cls: "nexus-sidebar-section" });
+  const countdownSection = el.createDiv({ cls: "hubstack-sidebar-section" });
   renderSidebarCountdown(countdownSection, app, plugin, cleanupFns);
 }
 
@@ -60,23 +64,23 @@ function renderQuickLinks(el: HTMLElement, plugin: HubstackPlugin) {
   const links = plugin.settings.quickLinks || [];
 
   if (links.length === 0) {
-    el.createDiv({ cls: "nexus-sidebar-empty", text: "暂无快捷链接" });
+    el.createDiv({ cls: "hubstack-sidebar-empty", text: "暂无快捷链接" });
     return;
   }
 
   for (let i = 0; i < links.length; i++) {
     const link = links[i];
-    const item = el.createDiv({ cls: "nexus-quick-link-item" });
+    const item = el.createDiv({ cls: "hubstack-quick-link-item" });
 
-    const left = item.createDiv({ cls: "nexus-quick-link-left" });
-    left.createSpan({ text: link.icon || "🔗", cls: "nexus-quick-link-icon" });
+    const left = item.createDiv({ cls: "hubstack-quick-link-left" });
+    left.createSpan({ text: link.icon || "🔗", cls: "hubstack-quick-link-icon" });
 
     // If URL is an obsidian wikilink ([[...]]), open internally
     const isInternal = link.url.startsWith("[[");
     if (isInternal) {
       const linkEl = left.createEl("span", {
         text: link.name,
-        cls: "nexus-quick-link-name",
+        cls: "hubstack-quick-link-name",
       });
       linkEl.addEventListener("click", () => {
         const filePath = link.url.replace(/\[\[|\]\]/g, "");
@@ -86,14 +90,14 @@ function renderQuickLinks(el: HTMLElement, plugin: HubstackPlugin) {
     } else {
       left.createEl("a", {
         text: link.name,
-        cls: "nexus-quick-link-name",
+        cls: "hubstack-quick-link-name",
         href: link.url,
       });
     }
 
     // Delete button
     const delBtn = item.createEl("button", {
-      cls: "nexus-quick-link-delete",
+      cls: "hubstack-quick-link-delete",
       text: "×",
     });
     delBtn.addEventListener("click", async (e) => {
@@ -116,16 +120,16 @@ function renderRecentFiles(el: HTMLElement, app: App, plugin: HubstackPlugin) {
     .slice(0, 8);
 
   if (files.length === 0) {
-    el.createDiv({ cls: "nexus-sidebar-empty", text: "暂无编辑记录" });
+    el.createDiv({ cls: "hubstack-sidebar-empty", text: "暂无编辑记录" });
     return;
   }
 
   for (const file of files) {
-    const item = el.createDiv({ cls: "nexus-recent-item" });
+    const item = el.createDiv({ cls: "hubstack-recent-item" });
 
     const nameEl = item.createEl("span", {
       text: file.basename,
-      cls: "nexus-recent-name",
+      cls: "hubstack-recent-name",
     });
     nameEl.addEventListener("click", () => {
       app.workspace.getLeaf(false).openFile(file);
@@ -133,7 +137,7 @@ function renderRecentFiles(el: HTMLElement, app: App, plugin: HubstackPlugin) {
 
     const timeEl = item.createEl("span", {
       text: formatRelativeTime(file.stat.mtime),
-      cls: "nexus-recent-time",
+      cls: "hubstack-recent-time",
     });
   }
 }
@@ -153,19 +157,19 @@ function formatRelativeTime(timestamp: number): string {
 }
 
 function renderSidebarBalance(el: HTMLElement, plugin: HubstackPlugin) {
-  const title = el.createEl("h3", { cls: "nexus-sidebar-title" });
+  const title = el.createEl("h3", { cls: "hubstack-sidebar-title" });
   title.createSpan({ text: "DeepSeek 余额" });
-  title.addClass("nexus-sidebar-title--balance");
+  title.addClass("hubstack-sidebar-title--balance");
 
-  const body = el.createDiv({ cls: "nexus-sidebar-balance" });
+  const body = el.createDiv({ cls: "hubstack-sidebar-balance" });
 
   const apiKey = plugin.settings.deepseekApiKey;
   if (!apiKey) {
-    body.createDiv({ cls: "nexus-sidebar-balance-empty", text: "未配置 API Key" });
+    body.createDiv({ cls: "hubstack-sidebar-balance-empty", text: "未配置 API Key" });
     return;
   }
 
-  body.createDiv({ cls: "nexus-sidebar-balance-loading", text: "加载中..." });
+  body.createDiv({ cls: "hubstack-sidebar-balance-loading", text: "加载中..." });
 
   fetch("https://api.deepseek.com/user/balance", {
     headers: { Authorization: `Bearer ${apiKey}` },
@@ -175,25 +179,25 @@ function renderSidebarBalance(el: HTMLElement, plugin: HubstackPlugin) {
       body.empty();
       const info = data.balance_infos?.[0];
       if (!info) {
-        body.createDiv({ cls: "nexus-sidebar-balance-empty", text: "无数据" });
+        body.createDiv({ cls: "hubstack-sidebar-balance-empty", text: "无数据" });
         return;
       }
 
       const total = parseFloat(info.total_balance);
 
-      const row = body.createDiv({ cls: "nexus-sidebar-balance-row" });
+      const row = body.createDiv({ cls: "hubstack-sidebar-balance-row" });
       row.createSpan({
-        cls: "nexus-sidebar-balance-amount",
+        cls: "hubstack-sidebar-balance-amount",
         text: `¥${total.toFixed(2)}`,
       });
       row.createSpan({
-        cls: data.is_available ? "nexus-sidebar-balance-ok" : "nexus-sidebar-balance-off",
+        cls: data.is_available ? "hubstack-sidebar-balance-ok" : "hubstack-sidebar-balance-off",
         text: data.is_available ? "可用" : "不可用",
       });
     })
     .catch(() => {
       body.empty();
-      body.createDiv({ cls: "nexus-sidebar-balance-empty", text: "查询失败" });
+      body.createDiv({ cls: "hubstack-sidebar-balance-empty", text: "查询失败" });
     });
 }
 
@@ -203,11 +207,11 @@ function renderSidebarCountdown(
   plugin: HubstackPlugin,
   cleanupFns: Array<() => void>
 ) {
-  const title = el.createEl("h3", { cls: "nexus-sidebar-title" });
+  const title = el.createEl("h3", { cls: "hubstack-sidebar-title" });
   title.createSpan({ text: "倒计时" });
-  title.addClass("nexus-sidebar-title--countdown");
+  title.addClass("hubstack-sidebar-title--countdown");
 
-  const body = el.createDiv({ cls: "nexus-sidebar-countdown" });
+  const body = el.createDiv({ cls: "hubstack-sidebar-countdown" });
 
   const render = () => {
     body.empty();
@@ -217,25 +221,25 @@ function renderSidebarCountdown(
       const item = items[i];
       const countdown = getCountdownStatus(item.name, item.targetDate);
 
-      const card = body.createDiv({ cls: "nexus-sidebar-countdown-card" });
+      const card = body.createDiv({ cls: "hubstack-sidebar-countdown-card" });
 
       if (countdown.status === "invalid") {
-        const left = card.createDiv({ cls: "nexus-sidebar-countdown-left" });
-        left.createDiv({ cls: "nexus-sidebar-countdown-name", text: countdown.title });
-        left.createDiv({ cls: "nexus-sidebar-countdown-error", text: countdown.message });
+        const left = card.createDiv({ cls: "hubstack-sidebar-countdown-left" });
+        left.createDiv({ cls: "hubstack-sidebar-countdown-name", text: countdown.title });
+        left.createDiv({ cls: "hubstack-sidebar-countdown-error", text: countdown.message });
       } else {
-        const left = card.createDiv({ cls: "nexus-sidebar-countdown-left" });
-        left.createDiv({ cls: "nexus-sidebar-countdown-name", text: countdown.title });
-        left.createDiv({ cls: "nexus-sidebar-countdown-label", text: item.targetDate });
+        const left = card.createDiv({ cls: "hubstack-sidebar-countdown-left" });
+        left.createDiv({ cls: "hubstack-sidebar-countdown-name", text: countdown.title });
+        left.createDiv({ cls: "hubstack-sidebar-countdown-label", text: item.targetDate });
 
-        const daysCls = `nexus-sidebar-countdown-days${
-          countdown.status === "today" ? " nexus-sidebar-countdown-days--today" :
-          countdown.status === "past" ? " nexus-sidebar-countdown-days--past" : ""
+        const daysCls = `hubstack-sidebar-countdown-days${
+          countdown.status === "today" ? " hubstack-sidebar-countdown-days--today" :
+          countdown.status === "past" ? " hubstack-sidebar-countdown-days--past" : ""
         }`;
         card.createDiv({ cls: daysCls, text: countdown.days != null ? `${countdown.days}` : "" });
       }
 
-      const delBtn = card.createDiv({ cls: "nexus-sidebar-countdown-del", text: "×" });
+      const delBtn = card.createDiv({ cls: "hubstack-sidebar-countdown-del", text: "×" });
       delBtn.addEventListener("click", async () => {
         plugin.settings.countdowns.splice(i, 1);
         await plugin.saveSettings();
@@ -243,7 +247,7 @@ function renderSidebarCountdown(
       });
     }
 
-    const addBtn = body.createDiv({ cls: "nexus-sidebar-countdown-add", text: "+ 添加项目" });
+    const addBtn = body.createDiv({ cls: "hubstack-sidebar-countdown-add", text: "+ 添加项目" });
     addBtn.addEventListener("click", () => {
       new InputModal(app, "添加倒计时项目", "项目名称（如：考试）", async (name) => {
         new InputModal(app, "添加倒计时项目", "目标日期（如 2026-06-17 或 2026.6.17）", async (date) => {
