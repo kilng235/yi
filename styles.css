@@ -381,13 +381,21 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid var(--nx-border-soft, #e5e7eb);
+  border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .hubstack-heatmap-header h3 {
   margin: 0 0 8px;
-  font-size: 0.8em;
-  font-weight: 400;
-  color: var(--nx-text-muted);
+  font-size: 1.25em;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #059669 0%, #047857 60%, #065f46 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .hubstack-heatmap-nav {
@@ -398,22 +406,22 @@
 }
 
 .hubstack-heatmap-arrow {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 18px;
-  color: var(--nx-text-muted);
+  color: #6b7280;
   transition: background 0.15s, color 0.15s;
   user-select: none;
 }
 
 .hubstack-heatmap-arrow:hover {
-  background: var(--nx-bg-card-hover);
-  color: var(--nx-text);
+  background: #f3f4f6;
+  color: #111827;
 }
 
 .hubstack-heatmap-arrow--disabled {
@@ -424,8 +432,8 @@
 .hubstack-heatmap-month-name {
   font-size: 0.85em;
   font-weight: 600;
-  color: var(--nx-text);
-  min-width: 80px;
+  color: #374151;
+  min-width: 90px;
   text-align: center;
 }
 
@@ -433,13 +441,14 @@
 .hubstack-heatmap-table {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 3px;
+  border-spacing: 4px;
+  animation: hubstack-table-in 0.32s ease-out both;
 }
 
 .hubstack-heatmap-th {
   font-size: 0.65em;
   font-weight: 500;
-  color: var(--nx-text-muted);
+  color: #9ca3af;
   text-align: center;
   padding: 0 0 4px;
 }
@@ -452,49 +461,69 @@
 .hubstack-heatmap-td .hubstack-heatmap-cell {
   width: 100%;
   aspect-ratio: 1;
-  max-width: 24px;
+  max-width: 26px;
   margin: 0 auto;
 }
 
 /* Cell base */
 .hubstack-heatmap-cell {
-  border-radius: 0;
+  border-radius: 5px;
   position: relative;
   cursor: default;
+  transition:
+    transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1.4),
+    box-shadow 0.18s ease,
+    background-color 0.25s ease;
+  animation: hubstack-cell-pop 0.32s cubic-bezier(0.2, 0.7, 0.3, 1.2) both;
 }
 
 .hubstack-heatmap-cell:hover {
-  outline: 2px solid var(--nx-text-muted);
-  outline-offset: 1px;
+  transform: scale(1.4);
+  z-index: 10;
+  box-shadow: 0 6px 14px rgba(16, 185, 129, 0.35);
+  outline: none;
 }
 
-/* Colors */
-.hubstack-heatmap-cell--level-0 { background: var(--nx-heat-0, #ebedf0); }
-.theme-dark .hubstack-heatmap-cell--level-0 { background: var(--nx-heat-0, #161b22); }
-.hubstack-heatmap-cell--level-1 { background: var(--nx-heat-1, #9be9a8); }
-.theme-dark .hubstack-heatmap-cell--level-1 { background: var(--nx-heat-1, #0e4429); }
-.hubstack-heatmap-cell--level-2 { background: var(--nx-heat-2, #40c463); }
-.theme-dark .hubstack-heatmap-cell--level-2 { background: var(--nx-heat-2, #006d32); }
-.hubstack-heatmap-cell--level-3 { background: var(--nx-heat-3, #30a14e); }
-.theme-dark .hubstack-heatmap-cell--level-3 { background: var(--nx-heat-3, #26a641); }
-.hubstack-heatmap-cell--level-4 { background: var(--nx-heat-4, #216e39); }
-.theme-dark .hubstack-heatmap-cell--level-4 { background: var(--nx-heat-4, #39d353); }
+.hubstack-heatmap-cell--today {
+  outline: 2px solid #10b981;
+  outline-offset: 1px;
+  animation:
+    hubstack-cell-pop 0.32s cubic-bezier(0.2, 0.7, 0.3, 1.2) both,
+    hubstack-today-pulse 2s ease-out infinite;
+}
+
+/* Colors (light theme: GitHub classic green on white) */
+.hubstack-heatmap-cell--level-0 { background: #ebedf0; }
+.hubstack-heatmap-cell--level-1 { background: #9be9a8; }
+.hubstack-heatmap-cell--level-2 { background: #40c463; }
+.hubstack-heatmap-cell--level-3 { background: #30a14e; }
+.hubstack-heatmap-cell--level-4 {
+  background: linear-gradient(135deg, #30a14e 0%, #216e39 100%);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+}
 
 /* Tooltip */
 .hubstack-heatmap-tip {
-  display: none;
+  display: block;
+  opacity: 0;
+  visibility: hidden;
   position: absolute;
-  bottom: calc(100% + 6px);
+  bottom: calc(100% + 8px);
   left: 50%;
-  transform: translateX(-50%);
-  background: #24292f;
+  transform: translate(-50%, 4px);
+  background: rgba(31, 41, 55, 0.95);
+  backdrop-filter: blur(8px);
   color: #fff;
-  padding: 4px 8px;
-  border-radius: 0;
+  padding: 5px 9px;
+  border-radius: 6px;
   font-size: 0.65em;
   white-space: nowrap;
   pointer-events: none;
   z-index: 100;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1.4),
+    visibility 0s linear 0.18s;
 }
 
 .hubstack-heatmap-tip::after {
@@ -504,27 +533,62 @@
   left: 50%;
   transform: translateX(-50%);
   border: 4px solid transparent;
-  border-top-color: #24292f;
+  border-top-color: rgba(31, 41, 55, 0.95);
 }
 
 .hubstack-heatmap-cell:hover .hubstack-heatmap-tip {
-  display: block;
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, -2px);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1.4),
+    visibility 0s linear 0s;
+}
+
+/* Animations */
+@keyframes hubstack-cell-pop {
+  from { opacity: 0; transform: scale(0.35); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes hubstack-table-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hubstack-today-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55); }
+  50%      { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+}
+
+/* Reduced-motion support */
+@media (prefers-reduced-motion: reduce) {
+  .hubstack-heatmap-cell,
+  .hubstack-heatmap-table {
+    animation: none;
+    transition: none;
+  }
+  .hubstack-heatmap-cell:hover {
+    transform: none;
+  }
 }
 
 /* Legend */
 .hubstack-heatmap-legend {
   display: flex;
   align-items: center;
-  gap: 3px;
-  margin-top: 12px;
+  gap: 4px;
+  margin-top: 14px;
   font-size: 0.6em;
-  color: var(--nx-text-muted);
+  color: #9ca3af;
   justify-content: flex-end;
 }
 
 .hubstack-heatmap-legend .hubstack-heatmap-cell {
   width: 12px;
   height: 12px;
+  animation: none;
 }
 .hubstack-bookshelf {
   padding: 12px;
@@ -2541,4 +2605,398 @@
   transform: none;
   box-shadow: none;
   opacity: 0.85;
+}
+
+/* ===================== 备考页签（Exam Tab） ===================== */
+
+.hubstack-exam {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 概览卡片 */
+.hubstack-exam-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.hubstack-exam-card {
+  background: var(--background-secondary);
+  border-radius: 10px;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.hubstack-exam-card-value {
+  font-size: 1.5em;
+  font-weight: 800;
+  color: var(--text-normal);
+}
+
+.hubstack-exam-card-label {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* 7 日迷你柱状图 */
+.hubstack-exam-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 80px;
+  padding: 4px 2px 0;
+}
+
+.hubstack-exam-chart-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.hubstack-exam-chart-barwrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.hubstack-exam-chart-bar {
+  width: 55%;
+  border-radius: 4px 4px 0 0;
+  background: var(--interactive-accent);
+  min-height: 4px;
+}
+
+.hubstack-exam-chart-label {
+  font-size: 0.72em;
+  color: var(--text-faint);
+  margin-top: 4px;
+}
+
+/* 学科行 */
+.hubstack-exam-deck {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.hubstack-exam-deck-name {
+  font-weight: 700;
+}
+
+.hubstack-exam-deck-meta {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.hubstack-exam-deck-btns {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.hubstack-exam-redo-row {
+  margin: 8px 0;
+}
+
+.hubstack-exam-redo-row button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 薄弱考点 */
+.hubstack-exam-topic {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.hubstack-exam-topic-name {
+  flex: 0 0 38%;
+  font-size: 0.92em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hubstack-exam-topic-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--background-modifier-border);
+  overflow: hidden;
+}
+
+.hubstack-exam-topic-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.hubstack-exam-topic-bar.is-good .hubstack-exam-topic-fill {
+  background: var(--color-green);
+}
+
+.hubstack-exam-topic-bar.is-mid .hubstack-exam-topic-fill {
+  background: var(--color-orange);
+}
+
+.hubstack-exam-topic-bar.is-bad .hubstack-exam-topic-fill {
+  background: var(--color-red);
+}
+
+.hubstack-exam-topic-acc {
+  flex: 0 0 auto;
+  font-size: 0.85em;
+  color: var(--text-muted);
+  min-width: 96px;
+  text-align: right;
+}
+
+/* 错题列表 */
+.hubstack-exam-wrong-item {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-red) 22%, transparent);
+  background: color-mix(in srgb, var(--color-red) 7%, transparent);
+  margin-bottom: 8px;
+}
+
+.hubstack-exam-wrong-stem {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.hubstack-exam-wrong-meta {
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.hubstack-exam-empty {
+  color: var(--text-faint);
+  font-size: 0.9em;
+  padding: 8px 0;
+}
+
+/* ===================== 备考答题弹窗 ===================== */
+
+.hubstack-exam-modal {
+  width: min(860px, 92vw);
+}
+
+.hubstack-exam-modal .modal-content {
+  padding: 18px 22px;
+  overflow-y: auto;
+}
+
+.ceq-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.ceq-progress {
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.ceq-type-badge {
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.ceq-bar {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--background-modifier-border);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.ceq-bar-fill {
+  height: 100%;
+  background: var(--interactive-accent);
+  transition: width 0.25s ease;
+}
+
+.ceq-stem {
+  font-size: 1.08em;
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+
+.ceq-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.ceq-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  line-height: 1.6;
+}
+
+
+.ceq-option:hover {
+  background: var(--background-modifier-hover);
+}
+
+.ceq-badge {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--background-modifier-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  margin-top: 1px;
+  background: var(--background-primary);
+}
+
+.ceq-option-text {
+  color: var(--text-normal);
+}
+
+.ceq-option.is-selected {
+  background: var(--background-modifier-active-hover);
+}
+
+.ceq-option.is-selected .ceq-badge {
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.ceq-option.is-correct {
+  background: color-mix(in srgb, var(--color-green) 14%, transparent);
+}
+
+.ceq-option.is-correct .ceq-badge {
+  background: var(--color-green);
+  border-color: var(--color-green);
+  color: #fff;
+}
+
+.ceq-option.is-wrong {
+  background: color-mix(in srgb, var(--color-red) 14%, transparent);
+}
+
+.ceq-option.is-wrong .ceq-badge {
+  background: var(--color-red);
+  border-color: var(--color-red);
+  color: #fff;
+}
+
+.ceq-option.is-dim {
+  opacity: 0.55;
+}
+
+.ceq-explanation {
+  border-left: 3px solid var(--color-green);
+  background: var(--background-secondary);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  line-height: 1.7;
+}
+
+.ceq-explanation-title {
+  font-size: 0.95em;
+  margin-bottom: 6px;
+}
+
+.ceq-explanation-body {
+  font-size: 0.95em;
+  color: var(--text-muted);
+}
+
+.ceq-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.ceq-foot-center {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.ceq-hint {
+  margin-right: auto;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.ceq-score {
+  text-align: center;
+  margin: 18px 0;
+}
+
+.ceq-score-num {
+  font-size: 3em;
+  font-weight: 800;
+  color: var(--color-green);
+}
+
+.ceq-score-total {
+  font-size: 1.6em;
+  color: var(--text-muted);
+}
+
+.ceq-score-pct {
+  display: inline-block;
+  margin-left: 16px;
+  font-size: 1.4em;
+  font-weight: 700;
+  color: var(--text-normal);
+}
+
+.ceq-wrong-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ceq-allcorrect {
+  text-align: center;
+  font-size: 1.2em;
+  margin: 20px 0;
+  color: var(--color-green);
+}
+
+.hubstack-exam-modal mark {
+  background: color-mix(in srgb, var(--color-blue) 22%, transparent);
+  color: inherit;
+  padding: 0 3px;
+  border-radius: 3px;
 }
