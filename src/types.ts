@@ -26,9 +26,12 @@ export interface HubstackSettings {
   quickLinks: QuickLink[];
   deepseekApiKey: string;
   countdowns: CountdownItem[];
-  activeTab: "dashboard" | "notes";
+  activeTab: "dashboard" | "notes" | "exam";
   noteTemplate: string;
   noteAutoTitle: boolean;
+  examQuizFolder: string;
+  examWrongFolder: string;
+  examRoundSize: number;
 }
 
 export const DEFAULT_SETTINGS: HubstackSettings = {
@@ -44,6 +47,7 @@ export const DEFAULT_SETTINGS: HubstackSettings = {
     cardCreate: 2,
     noteEdit: 1,
     noteCreate: 3,
+    quizAnswer: 2,
   },
   readingStats: {},
   readingSessions: {},
@@ -57,6 +61,9 @@ export const DEFAULT_SETTINGS: HubstackSettings = {
   activeTab: "dashboard",
   noteTemplate: "## {{date}}",
   noteAutoTitle: true,
+  examQuizFolder: "事业单位/05-闪点卡",
+  examWrongFolder: "事业单位/06-错题本",
+  examRoundSize: 10,
 };
 
 // ===== Heatmap =====
@@ -67,6 +74,7 @@ export interface HeatmapWeights {
   cardCreate: number;
   noteEdit: number;
   noteCreate: number;
+  quizAnswer: number;
 }
 
 // ===== Reading =====

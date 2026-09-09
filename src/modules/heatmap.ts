@@ -85,10 +85,19 @@ export function renderHeatmap(el: HTMLElement, settings: HubstackSettings, activ
           const key = formatDate(date);
           const score = scores[key] || 0;
           const level = score === 0 ? 0 : Math.min(4, Math.ceil(score / 10));
+          const isToday = key === formatDate(new Date());
 
-          const cell = td.createDiv({
-            cls: `hubstack-heatmap-cell hubstack-heatmap-cell--level-${level}`,
-          });
+          const cellCls = [
+            "hubstack-heatmap-cell",
+            `hubstack-heatmap-cell--level-${level}`,
+            isToday ? "hubstack-heatmap-cell--today" : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
+
+          const cell = td.createDiv({ cls: cellCls });
+          // Wave-like entrance: delay scales with diagonal position (row + col)
+          cell.style.animationDelay = `${(w + d) * 18}ms`;
           cell.createDiv({
             cls: "hubstack-heatmap-tip",
             text: `${score} 活跃度 · ${viewMonth + 1}月${dayNum}日`,
@@ -136,7 +145,8 @@ function buildDailyScores(settings: HubstackSettings, activityLog?: ActivityLog)
       (activity.cardComplete || 0) * w.cardComplete +
       (activity.cardCreate || 0) * w.cardCreate +
       (activity.noteEdit || 0) * (w.noteEdit || 0) +
-      (activity.noteCreate || 0) * (w.noteCreate || 0);
+      (activity.noteCreate || 0) * (w.noteCreate || 0) +
+      (activity.quizAnswer || 0) * (w.quizAnswer || 0);
     scores[dateKey] = (scores[dateKey] || 0) + points;
   }
 

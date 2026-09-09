@@ -4,6 +4,8 @@ import { EpubReaderView, HUBSTACK_EPUB_VIEW_TYPE } from "./modules/epub-reader";
 import { HubstackSettings } from "./types";
 import { loadExternalConfig, saveExternalConfig, mergeSettings } from "./config-sync";
 import { loadActivityLog, saveActivityLog } from "./activity-log";
+import { ExamStats, migrateLegacyExamData } from "./modules/exam-stats";
+import { ExamQuestion, parseVaultQuestions } from "./modules/exam-parser";
 
 const LEGACY_PLUGIN_DATA_PATH = ".obsidian/plugins/nexus/data.json";
 const LEGACY_NOTE_TEMPLATE = `## {{date}}
@@ -24,12 +26,33 @@ const MINIMAL_NOTE_TEMPLATE = "## {{date}}";
 
 export default class HubstackPlugin extends Plugin {
   settings: HubstackSettings;
+  examStats: ExamStats = new ExamStats();
 
   async onload() {
     await this.loadSettings();
     await this.migrateCountdownSettings();
     await this.migrateLegacyNoteTemplate();
     await this.backfillActivityFromVault();
+    await this.examStats.load(this.app);
+    await migrateLegacyExamData(this.app, this.examStats);
+
+    this.addCommand({
+      id: "open-exam-tab",
+      name: "打开备考页签",
+      callback: async () => {
+        await this.activateView();
+        const leaf = this.app.workspace.getLeavesOfType(HUBSTACK_VIEW_TYPE)[0];
+        if (leaf && leaf.view instanceof HubstackView) {
+          await (leaf.view as HubstackView).setActiveTab("exam");
+        }
+      },
+    });
+
+    this.addCommand({
+      id: "exam-rescan-bank",
+      name: "备考：重新扫描题库",
+      callback: () => this.loadExamBank(),
+    });
 
     this.registerView(HUBSTACK_VIEW_TYPE, (leaf) => new HubstackView(leaf, this));
     this.registerView(HUBSTACK_EPUB_VIEW_TYPE, (leaf) => new EpubReaderView(leaf));
@@ -133,6 +156,44 @@ export default class HubstackPlugin extends Plugin {
     }
   }
 
+  async loadExamBank(): Promise<ExamQuestion[]> {
+    try {
+      return await parseVaultQuestions(this.app, this.settings.examQuizFolder);
+    } catch (e) {
+      console.error("[hubstack-exam] 题库扫描失败", e);
+      return [];
+    }
+  }
+
+  /**
+   * 迁移：旧 career-exam-quiz 时代只有 recentWrong（按题干前缀记录），
+   * 把能对上题库的错题反哺成每题历史，重做队列与薄弱考点立刻可用。
+   */
+  seedExamHistoryFromBank(bank: ExamQuestion[]): void {
+    const hist = this.examStats.data.questionHistory;
+    let seeded = 0;
+    for (const q of bank) {
+      if (hist[q.id]) continue;
+      const wrong = this.examStats.data.recentWrong.find(
+        (w) => w.stem === q.stem.slice(0, 50)
+      );
+      if (wrong) {
+        hist[q.id] = {
+          seen: 1,
+          correct: 0,
+          wrong: 1,
+          lastCorrect: false,
+          lastTs: wrong.ts,
+        };
+        seeded += 1;
+      }
+    }
+    if (seeded > 0) {
+      void this.examStats.save(this.app);
+      console.info(`[hubstack-exam] 已从错题记录迁移 ${seeded} 题历史`);
+    }
+  }
+
   async activateView() {
     const { workspace } = this.app;
     let leaf = workspace.getLeavesOfType(HUBSTACK_VIEW_TYPE)[0];
@@ -231,6 +292,48 @@ class HubstackSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.noteAutoTitle)
           .onChange(async (value) => {
             this.plugin.settings.noteAutoTitle = value;
+            await this.plugin.saveSettings();
+          })
+      );
+
+    containerEl.createEl("h3", { text: "备考刷题" });
+
+    new Setting(containerEl)
+      .setName("题库目录")
+      .setDesc("扫描该目录下带 quiz 标签的 .md 题库")
+      .addText((text) =>
+        text
+          .setPlaceholder("事业单位/05-闪点卡")
+          .setValue(this.plugin.settings.examQuizFolder)
+          .onChange(async (value) => {
+            this.plugin.settings.examQuizFolder = value || "事业单位/05-闪点卡";
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("错题本目录")
+      .setDesc("「追加到错题本」写入的位置")
+      .addText((text) =>
+        text
+          .setPlaceholder("事业单位/06-错题本")
+          .setValue(this.plugin.settings.examWrongFolder)
+          .onChange(async (value) => {
+            this.plugin.settings.examWrongFolder = value || "事业单位/06-错题本";
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("智能刷题每轮题数")
+      .setDesc("智能出题模式每轮抽取的题目数量")
+      .addText((text) =>
+        text
+          .setPlaceholder("10")
+          .setValue(String(this.plugin.settings.examRoundSize))
+          .onChange(async (value) => {
+            const n = parseInt(value, 10);
+            this.plugin.settings.examRoundSize = Number.isFinite(n) && n > 0 ? n : 10;
             await this.plugin.saveSettings();
           })
       );
