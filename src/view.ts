@@ -11,6 +11,7 @@ import { renderBookshelf } from "./modules/bookshelf";
 import { renderTabBar, TabId } from "./modules/tab-bar";
 import { renderNotesFlow } from "./modules/notes-flow";
 import { loadActivityLog, saveActivityLog, todayKey, ActivityLog } from "./activity-log";
+import { renderExamTab } from "./modules/exam";
 
 export const HUBSTACK_VIEW_TYPE = "hubstack-view";
 
@@ -35,6 +36,17 @@ export class HubstackView extends ItemView {
   getIcon(): string { return "home"; }
 
   async onOpen() {
+    this.contentEl.addClass("hubstack-root");
+    try {
+      await this.bootstrap();
+    } catch (e) {
+      console.error("[hubstack] onOpen failed:", e);
+      this.renderFatalError(e);
+    }
+  }
+
+  /** 初始化数据/订阅并首次渲染 */
+  private async bootstrap(): Promise<void> {
     this.kanbanSync.updateSettings(this.plugin.settings);
     this.activityLog = await loadActivityLog(this.app);
     this.kanbanSync.setActivityCallback((type: string) => {
@@ -58,9 +70,44 @@ export class HubstackView extends ItemView {
       this.notes = notes;
       if (this.plugin.settings.activeTab === "notes") await this.render();
     });
+    this.plugin.examStats.onQuizAnswered = (n: number) => {
+      const key = todayKey();
+      if (!this.activityLog[key]) {
+        this.activityLog[key] = { cardComplete: 0, todoCheck: 0, cardCreate: 0, noteEdit: 0, noteCreate: 0 };
+      }
+      this.activityLog[key].quizAnswer = (this.activityLog[key].quizAnswer ?? 0) + n;
+      saveActivityLog(this.app, this.activityLog);
+    };
     await this.kanbanSync.init();
     await this.notesSync.init();
     this.registerVaultListeners();
+    await this.render();
+  }
+
+  /**
+   * 当 bootstrap 抛错时,在视图里显示错误信息,避免静默白屏
+   */
+  private renderFatalError(e: unknown): void {
+    const msg = e instanceof Error ? `${e.name}: ${e.message}` : String(e);
+    const stack = e instanceof Error && e.stack ? e.stack : "";
+    this.contentEl.empty();
+    this.contentEl.addClass("hubstack-fatal");
+    const wrap = this.contentEl.createDiv({ cls: "hubstack-fatal-wrap" });
+    wrap.createEl("h2", { text: "⚠️ Hubstack 加载失败" });
+    wrap.createEl("p", { text: msg });
+    if (stack) {
+      const pre = wrap.createEl("pre", { cls: "hubstack-fatal-stack" });
+      pre.textContent = stack;
+    }
+    const btn = wrap.createEl("button", {
+      text: "重试",
+      cls: "mod-cta",
+    });
+    btn.addEventListener("click", async () => {
+      this.contentEl.empty();
+      this.contentEl.removeClass("hubstack-fatal");
+      await this.onOpen();
+    });
   }
 
   async onClose() {
@@ -145,6 +192,13 @@ export class HubstackView extends ItemView {
         this.cleanupFns,
         (render) => render()
       );
+      return;
+    }
+
+    if (this.plugin.settings.activeTab === "exam") {
+      await renderExamTab(tabContent, this.plugin, () => {
+        if (this.plugin.settings.activeTab === "exam") void this.render();
+      });
       return;
     }
 

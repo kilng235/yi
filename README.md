@@ -65,7 +65,6 @@ src/
     |-- heatmap.ts
     |-- bookshelf.ts
     |-- epub-reader.ts
-    |-- balance.ts
     |-- kanban.ts
     |-- input-modal.ts
     `-- file-picker-modal.ts

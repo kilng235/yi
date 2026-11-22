@@ -377,124 +377,150 @@
 
 /* ===== HEATMAP (table calendar) ===== */
 .hubstack-heatmap {
-  padding: 14px;
+  padding: 16px 18px 12px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-}
-
-.hubstack-heatmap-header h3 {
-  margin: 0 0 8px;
-  font-size: 0.8em;
-  font-weight: 400;
-  color: var(--nx-text-muted);
-}
-
-.hubstack-heatmap-nav {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.hubstack-heatmap-arrow {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: var(--nx-bg-card, #ffffff);
+  border: 1px solid var(--nx-border);
   border-radius: 0;
-  cursor: pointer;
-  font-size: 18px;
+  box-shadow: var(--nx-shadow);
+}
+
+/* Header: title + subtitle */
+.hubstack-heatmap-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.hubstack-heatmap-heading h3 {
+  margin: 0;
+  font-size: 1.05em;
+  font-weight: 700;
+  color: var(--nx-text);
+  letter-spacing: -0.01em;
+}
+
+.hubstack-heatmap-subtitle {
+  margin-top: 3px;
+  font-size: 0.72em;
   color: var(--nx-text-muted);
-  transition: background 0.15s, color 0.15s;
-  user-select: none;
 }
 
-.hubstack-heatmap-arrow:hover {
-  background: var(--nx-bg-card-hover);
-  color: var(--nx-text);
+/* Horizontal scroll for narrow panes */
+.hubstack-heatmap-scroll {
+  overflow: visible;
+  padding-bottom: 2px;
 }
 
-.hubstack-heatmap-arrow--disabled {
-  opacity: 0.3;
-  pointer-events: none;
-}
-
-.hubstack-heatmap-month-name {
-  font-size: 0.85em;
-  font-weight: 600;
-  color: var(--nx-text);
-  min-width: 80px;
-  text-align: center;
-}
-
-/* Table layout */
+/* Grid layout: rows = weekdays, columns = weeks.
+   Table fills the pane so the 53 week-columns stretch to available width
+   instead of leaving dead space on the right. */
 .hubstack-heatmap-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: separate;
   border-spacing: 3px;
+  animation: hubstack-table-in 0.32s ease-out both;
 }
 
-.hubstack-heatmap-th {
-  font-size: 0.65em;
+/* Month band labels across the top */
+.hubstack-heatmap-month {
+  font-size: 0.6em;
   font-weight: 500;
   color: var(--nx-text-muted);
-  text-align: center;
-  padding: 0 0 4px;
+  text-align: left;
+  vertical-align: bottom;
+  padding: 0 0 4px 2px;
+  white-space: nowrap;
+}
+
+/* Empty corner cell above the weekday labels */
+.hubstack-heatmap-corner {
+  padding: 0;
+}
+
+/* Weekday labels down the left side */
+.hubstack-heatmap-weekday {
+  font-size: 0.6em;
+  font-weight: 500;
+  color: var(--nx-text-muted);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+  padding: 0 6px 0 0;
+  /* Keep the label column from stretching with the week-columns. */
+  width: 1%;
 }
 
 .hubstack-heatmap-td {
-  text-align: center;
+  padding: 0;
   vertical-align: middle;
 }
 
-.hubstack-heatmap-td .hubstack-heatmap-cell {
-  width: 100%;
-  aspect-ratio: 1;
-  max-width: 24px;
-  margin: 0 auto;
-}
-
-/* Cell base */
+/* Cell base — fills its (stretched) grid cell, capped to stay square-ish */
 .hubstack-heatmap-cell {
+  width: 100%;
+  max-width: 18px;
+  aspect-ratio: 1;
+  margin: 0 auto;
   border-radius: 0;
   position: relative;
   cursor: default;
+  transition:
+    transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1.4),
+    box-shadow 0.18s ease,
+    background-color 0.25s ease;
 }
 
 .hubstack-heatmap-cell:hover {
-  outline: 2px solid var(--nx-text-muted);
-  outline-offset: 1px;
+  transform: scale(1.45);
+  z-index: 10;
+  box-shadow: 0 6px 14px rgba(124, 58, 237, 0.35);
+  outline: none;
 }
 
-/* Colors */
-.hubstack-heatmap-cell--level-0 { background: var(--nx-heat-0, #ebedf0); }
-.theme-dark .hubstack-heatmap-cell--level-0 { background: var(--nx-heat-0, #161b22); }
-.hubstack-heatmap-cell--level-1 { background: var(--nx-heat-1, #9be9a8); }
-.theme-dark .hubstack-heatmap-cell--level-1 { background: var(--nx-heat-1, #0e4429); }
-.hubstack-heatmap-cell--level-2 { background: var(--nx-heat-2, #40c463); }
-.theme-dark .hubstack-heatmap-cell--level-2 { background: var(--nx-heat-2, #006d32); }
-.hubstack-heatmap-cell--level-3 { background: var(--nx-heat-3, #30a14e); }
-.theme-dark .hubstack-heatmap-cell--level-3 { background: var(--nx-heat-3, #26a641); }
-.hubstack-heatmap-cell--level-4 { background: var(--nx-heat-4, #216e39); }
-.theme-dark .hubstack-heatmap-cell--level-4 { background: var(--nx-heat-4, #39d353); }
+.hubstack-heatmap-cell--today {
+  outline: 2px solid var(--nx-accent, #7c3aed);
+  outline-offset: 1px;
+  animation: hubstack-today-pulse 2s ease-out infinite;
+}
 
-/* Tooltip */
+/* Colors (aurora purple ramp, light theme) */
+.hubstack-heatmap-cell--level-0 { background: #efeafd; }
+.hubstack-heatmap-cell--level-1 { background: #d5c9fa; }
+.hubstack-heatmap-cell--level-2 { background: #ab9bf0; }
+.hubstack-heatmap-cell--level-3 { background: #8571e6; }
+.hubstack-heatmap-cell--level-4 {
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.35);
+}
+
+/* Tooltip — absolutely anchored to the cell (a transform on the cell would
+   otherwise become the containing block and break position:fixed). */
 .hubstack-heatmap-tip {
-  display: none;
+  display: block;
+  opacity: 0;
+  visibility: hidden;
   position: absolute;
-  bottom: calc(100% + 6px);
+  bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  background: #24292f;
+  background: rgba(31, 41, 55, 0.95);
+  backdrop-filter: blur(8px);
   color: #fff;
-  padding: 4px 8px;
+  padding: 5px 9px;
   border-radius: 0;
   font-size: 0.65em;
   white-space: nowrap;
   pointer-events: none;
   z-index: 100;
+  transition:
+    opacity 0.18s ease,
+    visibility 0s linear 0.18s;
 }
 
 .hubstack-heatmap-tip::after {
@@ -504,27 +530,69 @@
   left: 50%;
   transform: translateX(-50%);
   border: 4px solid transparent;
-  border-top-color: #24292f;
+  border-top-color: rgba(31, 41, 55, 0.95);
+}
+
+/* Flipped below the cell when there is no room above. */
+.hubstack-heatmap-tip--below {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+
+.hubstack-heatmap-tip--below::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: rgba(31, 41, 55, 0.95);
 }
 
 .hubstack-heatmap-cell:hover .hubstack-heatmap-tip {
-  display: block;
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity 0.18s ease,
+    visibility 0s linear 0s;
+}
+
+/* Animations */
+@keyframes hubstack-table-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes hubstack-today-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.55); }
+  50%      { box-shadow: 0 0 0 5px rgba(124, 58, 237, 0); }
+}
+
+/* Reduced-motion support */
+@media (prefers-reduced-motion: reduce) {
+  .hubstack-heatmap-cell,
+  .hubstack-heatmap-table {
+    animation: none;
+    transition: none;
+  }
+  .hubstack-heatmap-cell:hover {
+    transform: none;
+  }
 }
 
 /* Legend */
 .hubstack-heatmap-legend {
   display: flex;
   align-items: center;
-  gap: 3px;
-  margin-top: 12px;
-  font-size: 0.6em;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 0.62em;
   color: var(--nx-text-muted);
   justify-content: flex-end;
 }
 
 .hubstack-heatmap-legend .hubstack-heatmap-cell {
   width: 12px;
+  max-width: 12px;
   height: 12px;
+  animation: none;
 }
 .hubstack-bookshelf {
   padding: 12px;
@@ -709,85 +777,6 @@
   right: 0;
 }
 
-/* ===== BALANCE ===== */
-.hubstack-balance-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--nx-border);
-}
-
-.hubstack-balance-body {
-  padding: 14px;
-}
-
-.hubstack-balance-empty {
-  color: var(--nx-text-muted);
-  font-size: 0.8em;
-  text-align: center;
-  padding: 12px;
-}
-
-.hubstack-balance-loading {
-  color: var(--nx-text-muted);
-  font-size: 0.8em;
-  text-align: center;
-  padding: 12px;
-}
-
-.hubstack-balance-main {
-  margin-bottom: 10px;
-}
-
-.hubstack-balance-amount {
-  font-size: 1.8em;
-  font-weight: 700;
-  color: var(--nx-text);
-}
-
-.hubstack-balance-bar-bg {
-  width: 100%;
-  height: 6px;
-  background: var(--nx-border);
-  border-radius: 0;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-
-.hubstack-balance-bar {
-  height: 100%;
-  background: var(--nx-accent);
-  border-radius: 0;
-  transition: width 0.3s;
-}
-
-.hubstack-balance-detail {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.hubstack-balance-tag {
-  font-size: 0.75em;
-  color: var(--nx-text-muted);
-  background: var(--nx-bg-sidebar);
-  padding: 2px 8px;
-  border-radius: 0;
-}
-
-.hubstack-balance-status {
-  font-size: 0.75em;
-}
-
-.hubstack-balance-ok {
-  color: var(--nx-success, #10b981);
-}
-
-.hubstack-balance-off {
-  color: var(--nx-danger, #ef4444);
-}
-
 /* ===== SIDEBAR (Quick Links + Recent) ===== */
 .hubstack-sidebar {
   display: flex;
@@ -837,10 +826,6 @@
 
 .hubstack-sidebar-section:nth-child(2) .hubstack-sidebar-title::before {
   background: var(--nx-accent, #f59e0b);
-}
-
-.hubstack-sidebar-title--balance::before {
-  background: var(--nx-success, #10b981);
 }
 
 .hubstack-sidebar-title--countdown::before {
@@ -973,41 +958,6 @@
   color: var(--nx-text-muted);
   flex-shrink: 0;
   margin-left: 8px;
-}
-
-/* Sidebar Balance */
-.hubstack-sidebar-balance {
-  padding: 10px 14px;
-}
-
-.hubstack-sidebar-balance-empty,
-.hubstack-sidebar-balance-loading {
-  color: var(--nx-text-muted);
-  font-size: 0.8em;
-  text-align: center;
-  padding: 8px;
-}
-
-.hubstack-sidebar-balance-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.hubstack-sidebar-balance-amount {
-  font-size: 1.2em;
-  font-weight: 700;
-  color: var(--nx-text);
-}
-
-.hubstack-sidebar-balance-ok {
-  font-size: 0.75em;
-  color: var(--nx-success, #10b981);
-}
-
-.hubstack-sidebar-balance-off {
-  font-size: 0.75em;
-  color: var(--nx-danger, #ef4444);
 }
 
 /* Sidebar Countdown */
@@ -1906,7 +1856,7 @@
   right: 0;
   background: var(--background-primary, #fff);
   border: 1px solid var(--background-modifier-border, rgba(0,0,0,0.06));
-  border-radius: 4px;
+  border-radius: 0;
   box-shadow: none;
   padding: 0;
   display: flex;
@@ -1979,7 +1929,7 @@
   display: block;
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: 0;
   margin: 8px 0;
   border: 1px solid var(--background-modifier-border, rgba(0,0,0,0.08));
   background: var(--background-secondary, rgba(0,0,0,0.02));
@@ -1991,7 +1941,7 @@
   font-size: 0.8em;
   color: var(--text-error, #c44);
   background: var(--background-modifier-error, rgba(220,40,40,0.08));
-  border-radius: 6px;
+  border-radius: 0;
   margin: 4px 0;
 }
 
@@ -2301,11 +2251,6 @@
     gap: 12px;
   }
   
-  /* Heatmap cells slightly larger */
-  .hubstack-heatmap-td .hubstack-heatmap-cell {
-    max-width: 28px;
-  }
-  
   /* Modal wider for tablet */
   .hubstack-note-editor {
     min-width: 560px;
@@ -2438,8 +2383,18 @@
   }
 }
 
-/* ===== NOTE EDITOR MODAL ===== */
-.hubstack-note-editor {
+/* ===== DARK THEME HEATMAP OVERRIDES ===== */
+.theme-dark .hubstack-heatmap-cell--level-0 { background: rgba(255,255,255,0.05); }
+.theme-dark .hubstack-heatmap-cell--level-1 { background: rgba(167,139,250,0.28); }
+.theme-dark .hubstack-heatmap-cell--level-2 { background: rgba(167,139,250,0.50); }
+.theme-dark .hubstack-heatmap-cell--level-3 { background: rgba(167,139,250,0.75); }
+.theme-dark .hubstack-heatmap-cell--level-4 {
+  background: linear-gradient(135deg, #a78bfa 0%, #818cf8 100%);
+  box-shadow: 0 0 8px rgba(167,139,250,0.4);
+}
+.theme-dark .hubstack-heatmap-cell:hover {
+  box-shadow: 0 6px 14px rgba(167,139,250,0.4);
+}
   min-width: 520px;
   max-width: 640px;
   padding: 20px 22px 18px;
@@ -2541,4 +2496,456 @@
   transform: none;
   box-shadow: none;
   opacity: 0.85;
+}
+
+/* ===================== 备考页签（Exam Tab） ===================== */
+
+.hubstack-exam {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 概览卡片 */
+.hubstack-exam-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.hubstack-exam-card {
+  background: var(--background-secondary);
+  border-radius: 0;
+  padding: 10px 12px;
+  text-align: center;
+}
+
+.hubstack-exam-card-value {
+  font-size: 1.5em;
+  font-weight: 800;
+  color: var(--text-normal);
+}
+
+.hubstack-exam-card-label {
+  font-size: 0.8em;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* 7 日迷你柱状图 */
+.hubstack-exam-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 80px;
+  padding: 4px 2px 0;
+}
+
+.hubstack-exam-chart-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.hubstack-exam-chart-barwrap {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.hubstack-exam-chart-bar {
+  width: 55%;
+  border-radius: 0;
+  background: var(--interactive-accent);
+  min-height: 4px;
+}
+
+.hubstack-exam-chart-label {
+  font-size: 0.72em;
+  color: var(--text-faint);
+  margin-top: 4px;
+}
+
+/* 学科行 */
+.hubstack-exam-deck {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 0;
+  margin-bottom: 8px;
+}
+
+.hubstack-exam-deck-name {
+  font-weight: 700;
+}
+
+.hubstack-exam-deck-meta {
+  font-size: 0.85em;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.hubstack-exam-deck-btns {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.hubstack-exam-redo-row {
+  margin: 8px 0;
+}
+
+.hubstack-exam-redo-row button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 薄弱考点 */
+.hubstack-exam-topic {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.hubstack-exam-topic-name {
+  flex: 0 0 38%;
+  font-size: 0.92em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hubstack-exam-topic-bar {
+  flex: 1;
+  height: 8px;
+  border-radius: 0;
+  background: var(--background-modifier-border);
+  overflow: hidden;
+}
+
+.hubstack-exam-topic-fill {
+  height: 100%;
+  border-radius: 0;
+  transition: width 0.3s ease;
+}
+
+.hubstack-exam-topic-bar.is-good .hubstack-exam-topic-fill {
+  background: var(--color-green);
+}
+
+.hubstack-exam-topic-bar.is-mid .hubstack-exam-topic-fill {
+  background: var(--color-orange);
+}
+
+.hubstack-exam-topic-bar.is-bad .hubstack-exam-topic-fill {
+  background: var(--color-red);
+}
+
+.hubstack-exam-topic-acc {
+  flex: 0 0 auto;
+  font-size: 0.85em;
+  color: var(--text-muted);
+  min-width: 96px;
+  text-align: right;
+}
+
+/* 错题列表 */
+.hubstack-exam-wrong-item {
+  padding: 10px 12px;
+  border-radius: 0;
+  border: 1px solid color-mix(in srgb, var(--color-red) 22%, transparent);
+  background: color-mix(in srgb, var(--color-red) 7%, transparent);
+  margin-bottom: 8px;
+}
+
+.hubstack-exam-wrong-stem {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.hubstack-exam-wrong-meta {
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+.hubstack-exam-empty {
+  color: var(--text-faint);
+  font-size: 0.9em;
+  padding: 8px 0;
+}
+
+/* ===================== 备考答题弹窗 ===================== */
+
+.hubstack-exam-modal {
+  width: min(860px, 92vw);
+}
+
+.hubstack-exam-modal .modal-content {
+  padding: 18px 22px;
+  overflow-y: auto;
+}
+
+.ceq-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.ceq-progress {
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.ceq-type-badge {
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 0;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.ceq-bar {
+  height: 4px;
+  border-radius: 0;
+  background: var(--background-modifier-border);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.ceq-bar-fill {
+  height: 100%;
+  background: var(--interactive-accent);
+  transition: width 0.25s ease;
+}
+
+.ceq-stem {
+  font-size: 1.08em;
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+
+.ceq-options {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.ceq-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 0;
+  cursor: pointer;
+  line-height: 1.6;
+}
+
+
+.ceq-option:hover {
+  background: var(--background-modifier-hover);
+}
+
+.ceq-badge {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--background-modifier-border);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+  margin-top: 1px;
+  background: var(--background-primary);
+}
+
+.ceq-option-text {
+  color: var(--text-normal);
+}
+
+.ceq-option.is-selected {
+  background: var(--background-modifier-active-hover);
+}
+
+.ceq-option.is-selected .ceq-badge {
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.ceq-option.is-correct {
+  background: color-mix(in srgb, var(--color-green) 14%, transparent);
+}
+
+.ceq-option.is-correct .ceq-badge {
+  background: var(--color-green);
+  border-color: var(--color-green);
+  color: #fff;
+}
+
+.ceq-option.is-wrong {
+  background: color-mix(in srgb, var(--color-red) 14%, transparent);
+}
+
+.ceq-option.is-wrong .ceq-badge {
+  background: var(--color-red);
+  border-color: var(--color-red);
+  color: #fff;
+}
+
+.ceq-option.is-dim {
+  opacity: 0.55;
+}
+
+.ceq-explanation {
+  border-left: 3px solid var(--color-green);
+  background: var(--background-secondary);
+  border-radius: 0;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  line-height: 1.7;
+}
+
+.ceq-explanation-title {
+  font-size: 0.95em;
+  margin-bottom: 6px;
+}
+
+.ceq-explanation-body {
+  font-size: 0.95em;
+  color: var(--text-muted);
+}
+
+.ceq-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.ceq-foot-center {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.ceq-hint {
+  margin-right: auto;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.ceq-score {
+  text-align: center;
+  margin: 18px 0;
+}
+
+.ceq-score-num {
+  font-size: 3em;
+  font-weight: 800;
+  color: var(--color-green);
+}
+
+.ceq-score-total {
+  font-size: 1.6em;
+  color: var(--text-muted);
+}
+
+.ceq-score-pct {
+  display: inline-block;
+  margin-left: 16px;
+  font-size: 1.4em;
+  font-weight: 700;
+  color: var(--text-normal);
+}
+
+.ceq-wrong-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.ceq-allcorrect {
+  text-align: center;
+  font-size: 1.2em;
+  margin: 20px 0;
+  color: var(--color-green);
+}
+
+.hubstack-exam-modal mark {
+  background: color-mix(in srgb, var(--color-blue) 22%, transparent);
+  color: inherit;
+  padding: 0 3px;
+  border-radius: 0;
+}
+
+/* ===================== AI 导题（Import Modal / Section） ===================== */
+
+.hubstack-exam-import-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ceq-import-body {
+  min-height: 120px;
+}
+
+.ceq-import-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.ceq-import-subject {
+  flex: 1;
+}
+
+.ceq-import-file {
+  width: 100%;
+}
+
+.ceq-import-status {
+  color: var(--text-muted);
+  font-size: 0.92em;
+  padding: 8px 0;
+  white-space: pre-wrap;
+}
+
+.ceq-import-preview {
+  max-height: 45vh;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.ceq-import-topic {
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.ceq-badge.is-single {
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.ceq-badge.is-judge {
+  background: var(--color-orange);
+  border-color: var(--color-orange);
+  color: #fff;
 }

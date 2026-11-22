@@ -12,6 +12,7 @@ export interface ActivityDay {
   cardCreate: number;
   noteEdit: number;
   noteCreate: number;
+  quizAnswer?: number;
 }
 
 export type ActivityLog = Record<string, ActivityDay>;
