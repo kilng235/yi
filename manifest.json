@@ -1,7 +1,7 @@
 {
   "id": "hubstack",
   "name": "Hubstack",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "minAppVersion": "0.15.0",
   "description": "Hubstack 首页仪表盘：待办、热力图、书架、EPUB、DeepSeek 余额、备考刷题工作台。",
   "author": "Juno",

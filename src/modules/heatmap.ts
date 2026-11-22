@@ -3,129 +3,198 @@ import { ActivityLog } from "../activity-log";
 
 const DAY_NAMES = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
 
+/** GitHub-style rows: only every other weekday is labelled. */
+const WEEKDAY_LABEL_ROWS = [0, 2, 4, 6]; // 周一 / 周三 / 周五 / 周日
+
+/** Number of week-columns to render (53 weeks ≈ one year). */
+const WEEKS = 53;
+
 export function renderHeatmap(el: HTMLElement, settings: HubstackSettings, activityLog?: ActivityLog) {
   el.empty();
   el.addClass("hubstack-heatmap");
 
   const scores = buildDailyScores(settings, activityLog);
-  const now = new Date();
-  let viewYear = now.getFullYear();
-  let viewMonth = now.getMonth(); // 0-indexed
+  const today = startOfDay(new Date());
+  const todayKey = formatDate(today);
 
-  function render() {
-    const totalPoints = getMonthScores(scores, viewYear, viewMonth).reduce((a, b) => a + b, 0);
+  // Monday of the current week, rolled back so the grid ends on this week.
+  const startMonday = addDays(startOfWeek(today), -(WEEKS - 1) * 7);
 
-    el.empty();
-
-    // Header with total
-    el.createDiv({ cls: "hubstack-heatmap-header" })
-      .createEl("h3", { text: `${totalPoints} 活跃度` });
-
-    // Month navigation
-    const MONTH_NAMES = ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"];
-    const nav = el.createDiv({ cls: "hubstack-heatmap-nav" });
-
-    const prevBtn = nav.createDiv({ cls: "hubstack-heatmap-arrow" });
-    prevBtn.innerHTML = "‹";
-    prevBtn.addEventListener("click", () => {
-      viewMonth--;
-      if (viewMonth < 0) { viewMonth = 11; viewYear--; }
-      render();
-    });
-
-    const monthLabel = nav.createSpan({
-      text: `${MONTH_NAMES[viewMonth]} ${viewYear}`,
-      cls: "hubstack-heatmap-month-name",
-    });
-
-    const nextBtn = nav.createDiv({ cls: "hubstack-heatmap-arrow" });
-    nextBtn.innerHTML = "›";
-    nextBtn.addEventListener("click", () => {
-      viewMonth++;
-      if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-      render();
-    });
-
-    // Disable next if already on current month
-    if (viewYear === now.getFullYear() && viewMonth === now.getMonth()) {
-      nextBtn.addClass("hubstack-heatmap-arrow--disabled");
+  // ---- total over the visible range ----
+  let total = 0;
+  for (let w = 0; w < WEEKS; w++) {
+    for (let d = 0; d < 7; d++) {
+      const date = addDays(startMonday, w * 7 + d);
+      if (date.getTime() > today.getTime()) continue;
+      total += scores[formatDate(date)] || 0;
     }
-
-    // Calendar table
-    const table = el.createEl("table", { cls: "hubstack-heatmap-table" });
-
-    // Header row
-    const thead = table.createEl("thead");
-    const headerRow = thead.createEl("tr");
-    for (const name of DAY_NAMES) {
-      headerRow.createEl("th", { text: name, cls: "hubstack-heatmap-th" });
-    }
-
-    // Calculate days
-    const firstDay = new Date(viewYear, viewMonth, 1);
-    const lastDay = new Date(viewYear, viewMonth + 1, 0);
-    const daysInMonth = lastDay.getDate();
-    const startWeekday = (firstDay.getDay() + 6) % 7; // Mon=0
-
-    // Body rows
-    const tbody = table.createEl("tbody");
-    let dayNum = -startWeekday;
-
-    for (let w = 0; w < 6; w++) {
-      if (dayNum > daysInMonth) break;
-
-      const row = tbody.createEl("tr");
-
-      for (let d = 0; d < 7; d++) {
-        dayNum++;
-        const td = row.createEl("td", { cls: "hubstack-heatmap-td" });
-
-        if (dayNum >= 1 && dayNum <= daysInMonth) {
-          const date = new Date(viewYear, viewMonth, dayNum);
-          const key = formatDate(date);
-          const score = scores[key] || 0;
-          const level = score === 0 ? 0 : Math.min(4, Math.ceil(score / 10));
-          const isToday = key === formatDate(new Date());
-
-          const cellCls = [
-            "hubstack-heatmap-cell",
-            `hubstack-heatmap-cell--level-${level}`,
-            isToday ? "hubstack-heatmap-cell--today" : "",
-          ]
-            .filter(Boolean)
-            .join(" ");
-
-          const cell = td.createDiv({ cls: cellCls });
-          // Wave-like entrance: delay scales with diagonal position (row + col)
-          cell.style.animationDelay = `${(w + d) * 18}ms`;
-          cell.createDiv({
-            cls: "hubstack-heatmap-tip",
-            text: `${score} 活跃度 · ${viewMonth + 1}月${dayNum}日`,
-          });
-        }
-      }
-    }
-
-    // Legend
-    const legend = el.createDiv({ cls: "hubstack-heatmap-legend" });
-    legend.createSpan({ text: "少" });
-    for (let i = 0; i <= 4; i++) {
-      legend.createDiv({ cls: `hubstack-heatmap-cell hubstack-heatmap-cell--level-${i}` });
-    }
-    legend.createSpan({ text: "多" });
   }
 
-  render();
+  el.empty();
+
+  // ---- header (title + subtitle) ----
+  const header = el.createDiv({ cls: "hubstack-heatmap-header" });
+  const heading = header.createDiv({ cls: "hubstack-heatmap-heading" });
+  heading.createEl("h3", { text: "用量热力图" });
+  heading.createDiv({
+    cls: "hubstack-heatmap-subtitle",
+    text: `最近 ${WEEKS} 周的每日用量 · 共 ${total} 活跃度`,
+  });
+
+  // ---- grid ----
+  const scroll = el.createDiv({ cls: "hubstack-heatmap-scroll" });
+  const table = scroll.createEl("table", { cls: "hubstack-heatmap-table" });
+
+  const thead = table.createEl("thead");
+  const headRow = thead.createEl("tr");
+  headRow.createEl("th", { cls: "hubstack-heatmap-corner" });
+  for (const seg of buildMonthSegments(startMonday)) {
+    headRow.createEl("th", {
+      text: seg.label,
+      cls: "hubstack-heatmap-month",
+      attr: { colspan: String(seg.weeks) },
+    });
+  }
+
+  const tbody = table.createEl("tbody");
+  for (let d = 0; d < 7; d++) {
+    const row = tbody.createEl("tr");
+    row.createEl("th", {
+      cls: "hubstack-heatmap-weekday",
+      text: WEEKDAY_LABEL_ROWS.includes(d) ? DAY_NAMES[d] : "",
+    });
+
+    for (let w = 0; w < WEEKS; w++) {
+      const date = addDays(startMonday, w * 7 + d);
+      const td = row.createEl("td", { cls: "hubstack-heatmap-td" });
+
+      // Days after today stay blank (the tail of the current week).
+      if (date.getTime() > today.getTime()) continue;
+
+      const key = formatDate(date);
+      const score = scores[key] || 0;
+      const level = score === 0 ? 0 : Math.min(4, Math.ceil(score / 10));
+      const cell = td.createDiv({
+        cls: [
+          "hubstack-heatmap-cell",
+          `hubstack-heatmap-cell--level-${level}`,
+          key === todayKey ? "hubstack-heatmap-cell--today" : "",
+        ]
+          .filter(Boolean)
+          .join(" "),
+      });
+      cell.createDiv({
+        cls: "hubstack-heatmap-tip",
+        text: `${score} 活跃度 · ${date.getMonth() + 1}月${date.getDate()}日`,
+      });
+      // The tooltip is position:fixed so no ancestor overflow can clip it;
+      // it must therefore be placed by hand above the hovered cell.
+      cell.addEventListener("mouseenter", () => positionTip(cell));
+      cell.addEventListener("mouseleave", () => hideTip(cell));
+    }
+  }
+
+  // ---- legend ----
+  const legend = el.createDiv({ cls: "hubstack-heatmap-legend" });
+  legend.createSpan({ text: "少" });
+  for (let i = 0; i <= 4; i++) {
+    legend.createDiv({ cls: `hubstack-heatmap-cell hubstack-heatmap-cell--level-${i}` });
+  }
+  legend.createSpan({ text: "多" });
 }
 
-function getMonthScores(scores: Record<string, number>, year: number, month: number): number[] {
-  const result: number[] = [];
-  const lastDay = new Date(year, month + 1, 0).getDate();
-  for (let d = 1; d <= lastDay; d++) {
-    const key = formatDate(new Date(year, month, d));
-    result.push(scores[key] || 0);
+/**
+ * Nudges a heatmap tooltip so it stays inside the visible pane: flips it below
+ * the cell when there is no room above, and clamps it horizontally.
+ *
+ * The tooltip stays `position:absolute` (anchored to the cell) on purpose —
+ * the cell scales on hover, and a transformed ancestor would become the
+ * containing block for a `position:fixed` child and throw it off-screen.
+ * Visibility itself is handled by the CSS :hover rule, so a failure here
+ * degrades to the default placement instead of hiding the tooltip.
+ */
+function positionTip(cell: HTMLElement) {
+  const tip = cell.firstElementChild as HTMLElement | null;
+  if (!tip) return;
+
+  const cellRect = cell.getBoundingClientRect();
+  // visibility:hidden still lays out, so this measurement is valid.
+  const tipRect = tip.getBoundingClientRect();
+
+  const bounds = visibleBounds(cell);
+  const gap = 8;
+  const margin = 4;
+
+  // Flip below when the tooltip would poke out of the top of the pane.
+  const flip = cellRect.top - tipRect.height - gap < bounds.top + margin;
+  tip.classList.toggle("hubstack-heatmap-tip--below", flip);
+
+  // Clamp horizontally into the pane.
+  let dx = 0;
+  const left = cellRect.left + cellRect.width / 2 - tipRect.width / 2;
+  if (left < bounds.left + margin) {
+    dx = bounds.left + margin - left;
+  } else if (left + tipRect.width > bounds.right - margin) {
+    dx = bounds.right - margin - (left + tipRect.width);
   }
-  return result;
+
+  tip.style.transform = `translateX(calc(-50% + ${dx}px))`;
+}
+
+function hideTip(cell: HTMLElement) {
+  const tip = cell.firstElementChild as HTMLElement | null;
+  if (!tip) return;
+  tip.classList.remove("hubstack-heatmap-tip--below");
+  tip.style.transform = "translateX(-50%)";
+}
+
+/** Bounding box of the nearest clipping ancestor, else the viewport. */
+function visibleBounds(el: HTMLElement): { top: number; left: number; right: number } {
+  let node = el.parentElement;
+  while (node && node !== document.body) {
+    const style = getComputedStyle(node);
+    if (/(auto|scroll|hidden)/.test(`${style.overflowX} ${style.overflowY}`)) {
+      const r = node.getBoundingClientRect();
+      return { top: r.top, left: r.left, right: r.right };
+    }
+    node = node.parentElement;
+  }
+  return { top: 0, left: 0, right: window.innerWidth };
+}
+
+/**
+ * Groups week-columns into month bands so each month can be rendered as a
+ * single <th colspan="n"> label, the way GitHub does it.
+ */
+function buildMonthSegments(startMonday: Date): { label: string; weeks: number }[] {
+  const segments: { label: string; weeks: number }[] = [];
+  let prevMonth = -1;
+  for (let w = 0; w < WEEKS; w++) {
+    const m = addDays(startMonday, w * 7).getMonth();
+    if (m !== prevMonth) {
+      segments.push({ label: `${m + 1}月`, weeks: 1 });
+      prevMonth = m;
+    } else {
+      segments[segments.length - 1].weeks++;
+    }
+  }
+  return segments;
+}
+
+function startOfDay(d: Date): Date {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+/** Monday of the week containing `d` (Mon=0). */
+function startOfWeek(d: Date): Date {
+  const r = startOfDay(d);
+  return addDays(r, -((r.getDay() + 6) % 7));
+}
+
+function addDays(d: Date, n: number): Date {
+  const r = new Date(d);
+  r.setDate(r.getDate() + n);
+  return r;
 }
 
 function buildDailyScores(settings: HubstackSettings, activityLog?: ActivityLog): Record<string, number> {

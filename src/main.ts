@@ -99,14 +99,35 @@ export default class HubstackPlugin extends Plugin {
     if ((localData as any).deepseekApiKey) {
       this.settings.deepseekApiKey = (localData as any).deepseekApiKey;
     }
+    if ((localData as any).mineruToken) {
+      this.settings.mineruToken = (localData as any).mineruToken;
+    } else {
+      // 首次使用时尝试从流水线脚本目录种子 MinerU Token
+      this.settings.mineruToken = (await this.readPipelineMineruToken()) || "";
+    }
+  }
+
+  private async readPipelineMineruToken(): Promise<string> {
+    try {
+      const envPath = "hubstack/脚本/mineru.env";
+      if (!(await this.app.vault.adapter.exists(envPath))) return "";
+      const content = await this.app.vault.adapter.read(envPath);
+      for (const line of content.split(/\r?\n/)) {
+        const t = line.trim();
+        if (t.startsWith("MINERU_TOKEN=")) return t.split("=", 1)[1].trim();
+      }
+    } catch {
+      // ignore
+    }
+    return "";
   }
 
   async saveSettings() {
     // Exclude sensitive fields from vault-synced config
-    const { deepseekApiKey, ...safeSettings } = this.settings;
+    const { deepseekApiKey, mineruToken, ...safeSettings } = this.settings;
     await saveExternalConfig(this.app, safeSettings as HubstackSettings);
-    // Store API key in plugin-local data (.obsidian/plugins/hubstack/data.json)
-    await this.saveData({ deepseekApiKey });
+    // Store API keys in plugin-local data (.obsidian/plugins/hubstack/data.json)
+    await this.saveData({ deepseekApiKey, mineruToken });
   }
 
   private async loadLegacyLocalData(): Promise<Partial<HubstackSettings> | null> {
@@ -273,7 +294,7 @@ class HubstackSettingTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("DeepSeek API Key")
-      .setDesc("用于余额查询，不会上传到任何地方")
+      .setDesc("用于备考 PDF → 题库的 AI 结构化，不会上传到任何地方")
       .addText((text) =>
         text
           .setPlaceholder("sk-...")
@@ -320,6 +341,33 @@ class HubstackSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.examWrongFolder)
           .onChange(async (value) => {
             this.plugin.settings.examWrongFolder = value || "事业单位/06-错题本";
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("MinerU API Token")
+      .setDesc("PDF 解析用，保存在本机不入库。留空则尝试读取 hubstack/脚本/mineru.env")
+      .addText((text) =>
+        text
+          .setPlaceholder("eyJhbGciOi...")
+          .setValue(this.plugin.settings.mineruToken)
+          .onChange(async (value) => {
+            this.plugin.settings.mineruToken = value.trim();
+            await this.plugin.saveSettings();
+          })
+      );
+
+    new Setting(containerEl)
+      .setName("AI 拆题模型")
+      .setDesc("DeepSeek 模型名，用于 PDF → 题库结构化")
+      .addDropdown((dropdown) =>
+        dropdown
+          .addOption("deepseek-chat", "deepseek-chat")
+          .addOption("deepseek-reasoner", "deepseek-reasoner")
+          .setValue(this.plugin.settings.aiModel)
+          .onChange(async (value) => {
+            this.plugin.settings.aiModel = value;
             await this.plugin.saveSettings();
           })
       );

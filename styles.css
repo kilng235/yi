@@ -377,132 +377,130 @@
 
 /* ===== HEATMAP (table calendar) ===== */
 .hubstack-heatmap {
-  padding: 14px;
+  padding: 16px 18px 12px;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
-  background: #ffffff;
-  border: 1px solid var(--nx-border-soft, #e5e7eb);
-  border-radius: 14px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  background: var(--nx-bg-card, #ffffff);
+  border: 1px solid var(--nx-border);
+  border-radius: 0;
+  box-shadow: var(--nx-shadow);
 }
 
-.hubstack-heatmap-header h3 {
-  margin: 0 0 8px;
-  font-size: 1.25em;
+/* Header: title + subtitle */
+.hubstack-heatmap-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.hubstack-heatmap-heading h3 {
+  margin: 0;
+  font-size: 1.05em;
   font-weight: 700;
-  letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #059669 0%, #047857 60%, #065f46 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--nx-text);
+  letter-spacing: -0.01em;
 }
 
-.hubstack-heatmap-nav {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
+.hubstack-heatmap-subtitle {
+  margin-top: 3px;
+  font-size: 0.72em;
+  color: var(--nx-text-muted);
 }
 
-.hubstack-heatmap-arrow {
-  width: 26px;
-  height: 26px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 18px;
-  color: #6b7280;
-  transition: background 0.15s, color 0.15s;
-  user-select: none;
+/* Horizontal scroll for narrow panes */
+.hubstack-heatmap-scroll {
+  overflow: visible;
+  padding-bottom: 2px;
 }
 
-.hubstack-heatmap-arrow:hover {
-  background: #f3f4f6;
-  color: #111827;
-}
-
-.hubstack-heatmap-arrow--disabled {
-  opacity: 0.3;
-  pointer-events: none;
-}
-
-.hubstack-heatmap-month-name {
-  font-size: 0.85em;
-  font-weight: 600;
-  color: #374151;
-  min-width: 90px;
-  text-align: center;
-}
-
-/* Table layout */
+/* Grid layout: rows = weekdays, columns = weeks.
+   Table fills the pane so the 53 week-columns stretch to available width
+   instead of leaving dead space on the right. */
 .hubstack-heatmap-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: separate;
-  border-spacing: 4px;
+  border-spacing: 3px;
   animation: hubstack-table-in 0.32s ease-out both;
 }
 
-.hubstack-heatmap-th {
-  font-size: 0.65em;
+/* Month band labels across the top */
+.hubstack-heatmap-month {
+  font-size: 0.6em;
   font-weight: 500;
-  color: #9ca3af;
-  text-align: center;
-  padding: 0 0 4px;
+  color: var(--nx-text-muted);
+  text-align: left;
+  vertical-align: bottom;
+  padding: 0 0 4px 2px;
+  white-space: nowrap;
+}
+
+/* Empty corner cell above the weekday labels */
+.hubstack-heatmap-corner {
+  padding: 0;
+}
+
+/* Weekday labels down the left side */
+.hubstack-heatmap-weekday {
+  font-size: 0.6em;
+  font-weight: 500;
+  color: var(--nx-text-muted);
+  text-align: left;
+  vertical-align: middle;
+  white-space: nowrap;
+  padding: 0 6px 0 0;
+  /* Keep the label column from stretching with the week-columns. */
+  width: 1%;
 }
 
 .hubstack-heatmap-td {
-  text-align: center;
+  padding: 0;
   vertical-align: middle;
 }
 
-.hubstack-heatmap-td .hubstack-heatmap-cell {
-  width: 100%;
-  aspect-ratio: 1;
-  max-width: 26px;
-  margin: 0 auto;
-}
-
-/* Cell base */
+/* Cell base — fills its (stretched) grid cell, capped to stay square-ish */
 .hubstack-heatmap-cell {
-  border-radius: 5px;
+  width: 100%;
+  max-width: 18px;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  border-radius: 0;
   position: relative;
   cursor: default;
   transition:
     transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1.4),
     box-shadow 0.18s ease,
     background-color 0.25s ease;
-  animation: hubstack-cell-pop 0.32s cubic-bezier(0.2, 0.7, 0.3, 1.2) both;
 }
 
 .hubstack-heatmap-cell:hover {
-  transform: scale(1.4);
+  transform: scale(1.45);
   z-index: 10;
-  box-shadow: 0 6px 14px rgba(16, 185, 129, 0.35);
+  box-shadow: 0 6px 14px rgba(124, 58, 237, 0.35);
   outline: none;
 }
 
 .hubstack-heatmap-cell--today {
-  outline: 2px solid #10b981;
+  outline: 2px solid var(--nx-accent, #7c3aed);
   outline-offset: 1px;
-  animation:
-    hubstack-cell-pop 0.32s cubic-bezier(0.2, 0.7, 0.3, 1.2) both,
-    hubstack-today-pulse 2s ease-out infinite;
+  animation: hubstack-today-pulse 2s ease-out infinite;
 }
 
-/* Colors (light theme: GitHub classic green on white) */
-.hubstack-heatmap-cell--level-0 { background: #ebedf0; }
-.hubstack-heatmap-cell--level-1 { background: #9be9a8; }
-.hubstack-heatmap-cell--level-2 { background: #40c463; }
-.hubstack-heatmap-cell--level-3 { background: #30a14e; }
+/* Colors (aurora purple ramp, light theme) */
+.hubstack-heatmap-cell--level-0 { background: #efeafd; }
+.hubstack-heatmap-cell--level-1 { background: #d5c9fa; }
+.hubstack-heatmap-cell--level-2 { background: #ab9bf0; }
+.hubstack-heatmap-cell--level-3 { background: #8571e6; }
 .hubstack-heatmap-cell--level-4 {
-  background: linear-gradient(135deg, #30a14e 0%, #216e39 100%);
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  box-shadow: 0 0 8px rgba(124, 58, 237, 0.35);
 }
 
-/* Tooltip */
+/* Tooltip — absolutely anchored to the cell (a transform on the cell would
+   otherwise become the containing block and break position:fixed). */
 .hubstack-heatmap-tip {
   display: block;
   opacity: 0;
@@ -510,19 +508,18 @@
   position: absolute;
   bottom: calc(100% + 8px);
   left: 50%;
-  transform: translate(-50%, 4px);
+  transform: translateX(-50%);
   background: rgba(31, 41, 55, 0.95);
   backdrop-filter: blur(8px);
   color: #fff;
   padding: 5px 9px;
-  border-radius: 6px;
+  border-radius: 0;
   font-size: 0.65em;
   white-space: nowrap;
   pointer-events: none;
   z-index: 100;
   transition:
     opacity 0.18s ease,
-    transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1.4),
     visibility 0s linear 0.18s;
 }
 
@@ -536,30 +533,36 @@
   border-top-color: rgba(31, 41, 55, 0.95);
 }
 
+/* Flipped below the cell when there is no room above. */
+.hubstack-heatmap-tip--below {
+  bottom: auto;
+  top: calc(100% + 8px);
+}
+
+.hubstack-heatmap-tip--below::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: rgba(31, 41, 55, 0.95);
+}
+
 .hubstack-heatmap-cell:hover .hubstack-heatmap-tip {
   opacity: 1;
   visibility: visible;
-  transform: translate(-50%, -2px);
   transition:
     opacity 0.18s ease,
-    transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1.4),
     visibility 0s linear 0s;
 }
 
 /* Animations */
-@keyframes hubstack-cell-pop {
-  from { opacity: 0; transform: scale(0.35); }
-  to   { opacity: 1; transform: scale(1); }
-}
-
 @keyframes hubstack-table-in {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes hubstack-today-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55); }
-  50%      { box-shadow: 0 0 0 5px rgba(16, 185, 129, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.55); }
+  50%      { box-shadow: 0 0 0 5px rgba(124, 58, 237, 0); }
 }
 
 /* Reduced-motion support */
@@ -579,14 +582,15 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-top: 14px;
-  font-size: 0.6em;
-  color: #9ca3af;
+  margin-top: 10px;
+  font-size: 0.62em;
+  color: var(--nx-text-muted);
   justify-content: flex-end;
 }
 
 .hubstack-heatmap-legend .hubstack-heatmap-cell {
   width: 12px;
+  max-width: 12px;
   height: 12px;
   animation: none;
 }
@@ -773,85 +777,6 @@
   right: 0;
 }
 
-/* ===== BALANCE ===== */
-.hubstack-balance-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border-bottom: 1px solid var(--nx-border);
-}
-
-.hubstack-balance-body {
-  padding: 14px;
-}
-
-.hubstack-balance-empty {
-  color: var(--nx-text-muted);
-  font-size: 0.8em;
-  text-align: center;
-  padding: 12px;
-}
-
-.hubstack-balance-loading {
-  color: var(--nx-text-muted);
-  font-size: 0.8em;
-  text-align: center;
-  padding: 12px;
-}
-
-.hubstack-balance-main {
-  margin-bottom: 10px;
-}
-
-.hubstack-balance-amount {
-  font-size: 1.8em;
-  font-weight: 700;
-  color: var(--nx-text);
-}
-
-.hubstack-balance-bar-bg {
-  width: 100%;
-  height: 6px;
-  background: var(--nx-border);
-  border-radius: 0;
-  overflow: hidden;
-  margin-bottom: 10px;
-}
-
-.hubstack-balance-bar {
-  height: 100%;
-  background: var(--nx-accent);
-  border-radius: 0;
-  transition: width 0.3s;
-}
-
-.hubstack-balance-detail {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 8px;
-}
-
-.hubstack-balance-tag {
-  font-size: 0.75em;
-  color: var(--nx-text-muted);
-  background: var(--nx-bg-sidebar);
-  padding: 2px 8px;
-  border-radius: 0;
-}
-
-.hubstack-balance-status {
-  font-size: 0.75em;
-}
-
-.hubstack-balance-ok {
-  color: var(--nx-success, #10b981);
-}
-
-.hubstack-balance-off {
-  color: var(--nx-danger, #ef4444);
-}
-
 /* ===== SIDEBAR (Quick Links + Recent) ===== */
 .hubstack-sidebar {
   display: flex;
@@ -901,10 +826,6 @@
 
 .hubstack-sidebar-section:nth-child(2) .hubstack-sidebar-title::before {
   background: var(--nx-accent, #f59e0b);
-}
-
-.hubstack-sidebar-title--balance::before {
-  background: var(--nx-success, #10b981);
 }
 
 .hubstack-sidebar-title--countdown::before {
@@ -1037,41 +958,6 @@
   color: var(--nx-text-muted);
   flex-shrink: 0;
   margin-left: 8px;
-}
-
-/* Sidebar Balance */
-.hubstack-sidebar-balance {
-  padding: 10px 14px;
-}
-
-.hubstack-sidebar-balance-empty,
-.hubstack-sidebar-balance-loading {
-  color: var(--nx-text-muted);
-  font-size: 0.8em;
-  text-align: center;
-  padding: 8px;
-}
-
-.hubstack-sidebar-balance-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.hubstack-sidebar-balance-amount {
-  font-size: 1.2em;
-  font-weight: 700;
-  color: var(--nx-text);
-}
-
-.hubstack-sidebar-balance-ok {
-  font-size: 0.75em;
-  color: var(--nx-success, #10b981);
-}
-
-.hubstack-sidebar-balance-off {
-  font-size: 0.75em;
-  color: var(--nx-danger, #ef4444);
 }
 
 /* Sidebar Countdown */
@@ -1970,7 +1856,7 @@
   right: 0;
   background: var(--background-primary, #fff);
   border: 1px solid var(--background-modifier-border, rgba(0,0,0,0.06));
-  border-radius: 4px;
+  border-radius: 0;
   box-shadow: none;
   padding: 0;
   display: flex;
@@ -2043,7 +1929,7 @@
   display: block;
   max-width: 100%;
   height: auto;
-  border-radius: 8px;
+  border-radius: 0;
   margin: 8px 0;
   border: 1px solid var(--background-modifier-border, rgba(0,0,0,0.08));
   background: var(--background-secondary, rgba(0,0,0,0.02));
@@ -2055,7 +1941,7 @@
   font-size: 0.8em;
   color: var(--text-error, #c44);
   background: var(--background-modifier-error, rgba(220,40,40,0.08));
-  border-radius: 6px;
+  border-radius: 0;
   margin: 4px 0;
 }
 
@@ -2365,11 +2251,6 @@
     gap: 12px;
   }
   
-  /* Heatmap cells slightly larger */
-  .hubstack-heatmap-td .hubstack-heatmap-cell {
-    max-width: 28px;
-  }
-  
   /* Modal wider for tablet */
   .hubstack-note-editor {
     min-width: 560px;
@@ -2502,8 +2383,18 @@
   }
 }
 
-/* ===== NOTE EDITOR MODAL ===== */
-.hubstack-note-editor {
+/* ===== DARK THEME HEATMAP OVERRIDES ===== */
+.theme-dark .hubstack-heatmap-cell--level-0 { background: rgba(255,255,255,0.05); }
+.theme-dark .hubstack-heatmap-cell--level-1 { background: rgba(167,139,250,0.28); }
+.theme-dark .hubstack-heatmap-cell--level-2 { background: rgba(167,139,250,0.50); }
+.theme-dark .hubstack-heatmap-cell--level-3 { background: rgba(167,139,250,0.75); }
+.theme-dark .hubstack-heatmap-cell--level-4 {
+  background: linear-gradient(135deg, #a78bfa 0%, #818cf8 100%);
+  box-shadow: 0 0 8px rgba(167,139,250,0.4);
+}
+.theme-dark .hubstack-heatmap-cell:hover {
+  box-shadow: 0 6px 14px rgba(167,139,250,0.4);
+}
   min-width: 520px;
   max-width: 640px;
   padding: 20px 22px 18px;
@@ -2625,7 +2516,7 @@
 
 .hubstack-exam-card {
   background: var(--background-secondary);
-  border-radius: 10px;
+  border-radius: 0;
   padding: 10px 12px;
   text-align: center;
 }
@@ -2669,7 +2560,7 @@
 
 .hubstack-exam-chart-bar {
   width: 55%;
-  border-radius: 4px 4px 0 0;
+  border-radius: 0;
   background: var(--interactive-accent);
   min-height: 4px;
 }
@@ -2688,7 +2579,7 @@
   gap: 10px;
   padding: 10px 12px;
   border: 1px solid var(--background-modifier-border);
-  border-radius: 10px;
+  border-radius: 0;
   margin-bottom: 8px;
 }
 
@@ -2736,14 +2627,14 @@
 .hubstack-exam-topic-bar {
   flex: 1;
   height: 8px;
-  border-radius: 4px;
+  border-radius: 0;
   background: var(--background-modifier-border);
   overflow: hidden;
 }
 
 .hubstack-exam-topic-fill {
   height: 100%;
-  border-radius: 4px;
+  border-radius: 0;
   transition: width 0.3s ease;
 }
 
@@ -2770,7 +2661,7 @@
 /* 错题列表 */
 .hubstack-exam-wrong-item {
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid color-mix(in srgb, var(--color-red) 22%, transparent);
   background: color-mix(in srgb, var(--color-red) 7%, transparent);
   margin-bottom: 8px;
@@ -2818,14 +2709,14 @@
 .ceq-type-badge {
   font-size: 12px;
   padding: 2px 10px;
-  border-radius: 999px;
+  border-radius: 0;
   background: var(--interactive-accent);
   color: var(--text-on-accent);
 }
 
 .ceq-bar {
   height: 4px;
-  border-radius: 2px;
+  border-radius: 0;
   background: var(--background-modifier-border);
   overflow: hidden;
   margin-bottom: 16px;
@@ -2855,7 +2746,7 @@
   align-items: flex-start;
   gap: 12px;
   padding: 10px 14px;
-  border-radius: 8px;
+  border-radius: 0;
   cursor: pointer;
   line-height: 1.6;
 }
@@ -2921,7 +2812,7 @@
 .ceq-explanation {
   border-left: 3px solid var(--color-green);
   background: var(--background-secondary);
-  border-radius: 0 8px 8px 0;
+  border-radius: 0;
   padding: 10px 14px;
   margin-bottom: 16px;
   line-height: 1.7;
@@ -2998,5 +2889,63 @@
   background: color-mix(in srgb, var(--color-blue) 22%, transparent);
   color: inherit;
   padding: 0 3px;
-  border-radius: 3px;
+  border-radius: 0;
+}
+
+/* ===================== AI 导题（Import Modal / Section） ===================== */
+
+.hubstack-exam-import-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ceq-import-body {
+  min-height: 120px;
+}
+
+.ceq-import-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.ceq-import-subject {
+  flex: 1;
+}
+
+.ceq-import-file {
+  width: 100%;
+}
+
+.ceq-import-status {
+  color: var(--text-muted);
+  font-size: 0.92em;
+  padding: 8px 0;
+  white-space: pre-wrap;
+}
+
+.ceq-import-preview {
+  max-height: 45vh;
+  overflow-y: auto;
+  margin-bottom: 12px;
+}
+
+.ceq-import-topic {
+  color: var(--text-muted);
+  font-size: 0.9em;
+}
+
+.ceq-badge.is-single {
+  background: var(--interactive-accent);
+  border-color: var(--interactive-accent);
+  color: var(--text-on-accent);
+}
+
+.ceq-badge.is-judge {
+  background: var(--color-orange);
+  border-color: var(--color-orange);
+  color: #fff;
 }

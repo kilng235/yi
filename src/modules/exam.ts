@@ -3,6 +3,7 @@ import { ExamQuestion, groupByDeck } from "./exam-parser";
 import { buildSmartQueue, buildWrongRedoQueue } from "./exam-scheduler";
 import { ExamStats, ExamWrongForExport, examTodayKey } from "./exam-stats";
 import { ExamQuizModal } from "./exam-quiz-modal";
+import { ExamImportModal } from "./exam-import";
 
 /**
  * 备考页签：把原 career-exam-quiz 工作台以 hubstack section 风格渲染。
@@ -64,6 +65,24 @@ export async function renderExamTab(
     });
     return;
   }
+
+  // ===== AI 导题 =====
+  const importBody = examSection(container, "AI 导题", "green");
+  const importRow = importBody.createDiv("hubstack-exam-import-row");
+  importRow.createSpan({
+    text: "选一份试卷 PDF，自动完成 MinerU 解析 → AI 拆题 → 写入题库",
+    cls: "hubstack-exam-deck-meta",
+  });
+  const importBtn = importRow.createEl("button", { text: "导入 PDF 拆题", cls: "mod-cta" });
+  importBtn.addEventListener("click", () => {
+    new ExamImportModal(app, {
+      mineruToken: plugin.settings.mineruToken,
+      aiApiKey: plugin.settings.deepseekApiKey,
+      aiModel: plugin.settings.aiModel,
+      bankFolder: plugin.settings.examQuizFolder,
+      onDone: onRoundEnd,
+    }).open();
+  });
 
   // ===== 学科刷题 =====
   const deckBody = examSection(container, "学科刷题", "blue");

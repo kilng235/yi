@@ -50,10 +50,6 @@ export function renderSidebar(
     app.vault.offref(createRef);
   });
 
-  // === DeepSeek Balance ===
-  const balanceSection = el.createDiv({ cls: "hubstack-sidebar-section" });
-  renderSidebarBalance(balanceSection, plugin);
-
   // === Countdown ===
   const countdownSection = el.createDiv({ cls: "hubstack-sidebar-section" });
   renderSidebarCountdown(countdownSection, app, plugin, cleanupFns);
@@ -154,51 +150,6 @@ function formatRelativeTime(timestamp: number): string {
   if (hours < 24) return `${hours}小时前`;
   if (days < 30) return `${days}天前`;
   return `${Math.floor(days / 30)}个月前`;
-}
-
-function renderSidebarBalance(el: HTMLElement, plugin: HubstackPlugin) {
-  const title = el.createEl("h3", { cls: "hubstack-sidebar-title" });
-  title.createSpan({ text: "DeepSeek 余额" });
-  title.addClass("hubstack-sidebar-title--balance");
-
-  const body = el.createDiv({ cls: "hubstack-sidebar-balance" });
-
-  const apiKey = plugin.settings.deepseekApiKey;
-  if (!apiKey) {
-    body.createDiv({ cls: "hubstack-sidebar-balance-empty", text: "未配置 API Key" });
-    return;
-  }
-
-  body.createDiv({ cls: "hubstack-sidebar-balance-loading", text: "加载中..." });
-
-  fetch("https://api.deepseek.com/user/balance", {
-    headers: { Authorization: `Bearer ${apiKey}` },
-  })
-    .then((r) => r.json())
-    .then((data) => {
-      body.empty();
-      const info = data.balance_infos?.[0];
-      if (!info) {
-        body.createDiv({ cls: "hubstack-sidebar-balance-empty", text: "无数据" });
-        return;
-      }
-
-      const total = parseFloat(info.total_balance);
-
-      const row = body.createDiv({ cls: "hubstack-sidebar-balance-row" });
-      row.createSpan({
-        cls: "hubstack-sidebar-balance-amount",
-        text: `¥${total.toFixed(2)}`,
-      });
-      row.createSpan({
-        cls: data.is_available ? "hubstack-sidebar-balance-ok" : "hubstack-sidebar-balance-off",
-        text: data.is_available ? "可用" : "不可用",
-      });
-    })
-    .catch(() => {
-      body.empty();
-      body.createDiv({ cls: "hubstack-sidebar-balance-empty", text: "查询失败" });
-    });
 }
 
 function renderSidebarCountdown(

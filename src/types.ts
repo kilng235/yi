@@ -32,6 +32,8 @@ export interface HubstackSettings {
   examQuizFolder: string;
   examWrongFolder: string;
   examRoundSize: number;
+  mineruToken: string;
+  aiModel: string;
 }
 
 export const DEFAULT_SETTINGS: HubstackSettings = {
@@ -61,9 +63,11 @@ export const DEFAULT_SETTINGS: HubstackSettings = {
   activeTab: "dashboard",
   noteTemplate: "## {{date}}",
   noteAutoTitle: true,
-  examQuizFolder: "事业单位/05-闪点卡",
-  examWrongFolder: "事业单位/06-错题本",
+  examQuizFolder: "hubstack/题库",
+  examWrongFolder: "hubstack/错题本",
   examRoundSize: 10,
+  mineruToken: "",
+  aiModel: "deepseek-chat",
 };
 
 // ===== Heatmap =====
